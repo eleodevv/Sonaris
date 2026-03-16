@@ -106,7 +106,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return;
     }
     final ok = await _audio.startRecording();
-    if (!ok) return;
+    if (!ok) {
+      _snack('Sin permiso de micrófono. Ve a Ajustes → Privacidad → Micrófono → Sonaris');
+      return;
+    }
     setState(() { _recording = true; _progress = 0; _result = null; });
     _timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
       setState(() => _progress++);
@@ -127,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final r = await context.read<ApiService>().detectarAcorde(path, acordeEsperado: _acorde);
       setState(() => _result = r);
     } catch (e) {
-      _snack('Error: $e');
+      _snack('Error al analizar: ${e.toString().substring(0, e.toString().length.clamp(0, 80))}');
     } finally {
       setState(() => _processing = false);
     }
