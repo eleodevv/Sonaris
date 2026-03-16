@@ -5,7 +5,7 @@ class ApiService {
   // Android emulator: http://10.0.2.2:8000
   // iOS simulator:    http://localhost:8000
   // Dispositivo físico: http://TU_IP:8000
-  static const String baseUrl = 'http://192.168.1.71:8000';
+  static const String baseUrl = 'https://9hvq80jq-8000.usw3.devtunnels.ms';
 
   Future<Map<String, dynamic>> getAcordes() async {
     final response = await http.get(Uri.parse('$baseUrl/acordes'));
