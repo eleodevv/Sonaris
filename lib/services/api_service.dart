@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -17,18 +18,21 @@ class ApiService {
     String audioPath, {
     String? acordeEsperado,
   }) async {
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/detectar'));
-    // Enviar acorde en filename como fallback por si el form field no llega
+    // Usa /verificar si hay acorde esperado (da más detalle: notas faltantes, extra, etc.)
+    final endpoint = acordeEsperado != null ? 'verificar' : 'detectar';
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/$endpoint'));
     final filename = acordeEsperado != null ? '$acordeEsperado.wav' : 'audio.wav';
     request.files.add(await http.MultipartFile.fromPath('audio', audioPath,
         filename: filename));
     if (acordeEsperado != null) {
       request.fields['acorde_esperado'] = acordeEsperado;
     }
-    var streamed = await request.send();
-    var response = await http.Response.fromStream(streamed);
+    // Timeout de 10s para evitar que la app se quede colgada
+    var streamed = await request.send().timeout(const Duration(seconds: 10));
+    var response = await http.Response.fromStream(streamed)
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) return json.decode(response.body);
-    throw Exception('Error al detectar acorde');
+    throw Exception('Error al detectar acorde (${response.statusCode})');
   }
 
   Future<bool> checkHealth() async {
