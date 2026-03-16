@@ -18,7 +18,10 @@ class ApiService {
     String? acordeEsperado,
   }) async {
     var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/detectar'));
-    request.files.add(await http.MultipartFile.fromPath('audio', audioPath));
+    // Enviar acorde en filename como fallback por si el form field no llega
+    final filename = acordeEsperado != null ? '$acordeEsperado.wav' : 'audio.wav';
+    request.files.add(await http.MultipartFile.fromPath('audio', audioPath,
+        filename: filename));
     if (acordeEsperado != null) {
       request.fields['acorde_esperado'] = acordeEsperado;
     }
