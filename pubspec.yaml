@@ -1,7 +1,7 @@
 name: sonaris_flutter
-description: "App para practicar acordes de guitarra con detección DSP"
+description: "App para practicar acordes de guitarra con detección MLP"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -14,6 +14,7 @@ dependencies:
   record: ^5.0.4
   path_provider: ^2.1.1
   provider: ^6.1.1
+  audioplayers: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -35,3 +36,9 @@ flutter:
   assets:
     - assets/logo.png
     - assets/fondo.png
+    - assets/sample_A.wav
+    - assets/sample_Am.wav
+    - assets/sample_C.wav
+    - assets/sample_D.wav
+    - assets/sample_F.wav
+    - assets/sample_Bm7.wav

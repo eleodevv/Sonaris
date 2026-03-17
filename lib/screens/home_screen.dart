@@ -1,50 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import 'dart:math';
 import '../services/api_service.dart';
 import '../services/audio_service.dart';
 
-// ── CHORD DATA ───────────────────────────────────────────
-const Map<String, List<String>> acordesBasicos = {
-  'A': ['A','C#','E'], 'Am': ['A','C','E'], 'C': ['C','E','G'],
-  'D': ['D','F#','A'], 'Dm': ['D','F','A'], 'E': ['E','G#','B'],
-  'Em': ['E','G','B'], 'G': ['G','B','D'],
-  'C7': ['C','E','G','A#'], 'G7': ['G','B','D','F'],
-};
-const Map<String, List<String>> acordesMedios = {
-  'F': ['F','A','C'], 'Bm': ['B','D','F#'],
-  'A7': ['A','C#','E','G'], 'E7': ['E','G#','B','D'],
-  'Am7': ['A','C','E','G'], 'Cmaj7': ['C','E','G','B'],
-  'Dsus4': ['D','G','A'], 'Asus4': ['A','D','E'],
-};
-const Map<String, List<String>> acordesAvanzados = {
-  'Gm': ['G','A#','D'], 'F#m': ['F#','A','C#'],
-};
-const Map<String, String> chordNames = {
-  'A':'LA Mayor','Am':'LA Menor','C':'DO Mayor','D':'RE Mayor',
-  'Dm':'RE Menor','E':'MI Mayor','Em':'MI Menor','G':'SOL Mayor',
-  'C7':'DO Séptima','G7':'SOL Séptima','F':'FA Mayor','Bm':'SI Menor',
-  'A7':'LA Séptima','E7':'MI Séptima','Am7':'LA Men. 7ma',
-  'Cmaj7':'DO May. 7ma','Dsus4':'RE Sus4','Asus4':'LA Sus4',
-  'Gm':'SOL Menor','F#m':'FA# Menor',
-};
-const Map<String, List<List<int>>> chordFrets = {
-  'A':  [[1,2],[2,2],[3,2]],   'Am': [[1,2],[2,2],[3,1]],
-  'C':  [[1,3],[2,2],[4,1]],   'D':  [[1,3],[2,2],[3,3]],
-  'Dm': [[1,3],[2,2],[3,1]],   'E':  [[3,1],[4,2],[5,2]],
-  'Em': [[4,2],[5,2]],         'G':  [[0,3],[4,2],[5,3]],
-  'C7': [[1,3],[2,2],[3,3],[4,1]], 'G7': [[0,3],[1,1],[4,2],[5,1]],
-  'F':  [[0,1],[1,1],[2,2],[3,3],[4,3],[5,1]],
-  'Bm': [[1,2],[2,4],[3,4],[4,3]], 'A7': [[1,2],[3,2]],
-  'E7': [[3,1],[4,2]],         'Am7':[[1,2],[3,1]],
-  'Cmaj7':[[1,3],[2,2],[3,4]], 'Dsus4':[[1,3],[2,3],[3,2]],
-  'Asus4':[[1,2],[2,2],[3,2]], 'Gm': [[0,3],[1,1],[2,2],[3,3],[4,3],[5,1]],
-  'F#m':[[0,2],[1,2],[2,4],[3,4],[4,3]],
-};
-
-// ── COLORS ───────────────────────────────────────────────
 const bg      = Color(0xFF080808);
 const bgCard  = Color(0xFF111111);
 const bgCard2 = Color(0xFF1A1A1A);
@@ -55,6 +17,146 @@ const cGreen  = Color(0xFF00E676);
 const cRed    = Color(0xFFFF5252);
 const cAmber  = Color(0xFFFFD54F);
 
+const List<String> kAcordes = ['A', 'Am', 'C', 'D', 'F', 'Bm7'];
+
+const Map<String, String> kNombres = {
+  'A': 'LA Mayor', 'Am': 'LA Menor', 'C': 'DO Mayor',
+  'D': 'RE Mayor', 'F': 'FA Mayor',  'Bm7': 'SI Menor 7ma',
+};
+
+const Map<String, List<String>> kNotas = {
+  'A': ['A','C#','E'], 'Am': ['A','C','E'], 'C': ['C','E','G'],
+  'D': ['D','F#','A'], 'F': ['F','A','C'],  'Bm7': ['B','D','F#','A'],
+};
+
+const Map<String, String> kDescripcion = {
+  'A':   'Tres dedos en el segundo traste, cuerdas 2-3-4. Acorde abierto.',
+  'Am':  'Similar a A pero con el dedo 1 en cuerda 2, traste 1.',
+  'C':   'Forma diagonal con 3 dedos. Uno de los primeros acordes a aprender.',
+  'D':   'Tres dedos en cuerdas 1-2-3. Solo se tocan 4 cuerdas.',
+  'F':   'Cejilla completa en traste 1. El reto clásico del principiante.',
+  'Bm7': 'Cejilla en traste 2 con dos dedos adicionales.',
+};
+
+const Map<String, String> kSamples = {
+  'A': 'sample_A.wav', 'Am': 'sample_Am.wav', 'C': 'sample_C.wav',
+  'D': 'sample_D.wav', 'F': 'sample_F.wav',   'Bm7': 'sample_Bm7.wav',
+};
+
+class _Dot {
+  final int string, fret, finger;
+  const _Dot(this.string, this.fret, this.finger);
+}
+
+class ChordDiagram {
+  final int startFret;
+  final List<_Dot> dots;
+  final List<int> openStrings;
+  final List<int> mutedStrings;
+  final bool hasBarre;
+  final int barreFret, barreFrom, barreTo;
+  const ChordDiagram({
+    this.startFret = 1, required this.dots,
+    this.openStrings = const [], this.mutedStrings = const [],
+    this.hasBarre = false, this.barreFret = 0,
+    this.barreFrom = 0, this.barreTo = 5,
+  });
+}
+
+const Map<String, ChordDiagram> kDiagramas = {
+  'A':   ChordDiagram(startFret:1, dots:[_Dot(1,2,1),_Dot(2,2,2),_Dot(3,2,3)], openStrings:[4,5], mutedStrings:[0]),
+  'Am':  ChordDiagram(startFret:1, dots:[_Dot(1,2,2),_Dot(2,2,3),_Dot(3,1,1)], openStrings:[4,5], mutedStrings:[0]),
+  'C':   ChordDiagram(startFret:1, dots:[_Dot(1,1,1),_Dot(2,2,2),_Dot(4,3,3)], openStrings:[3,5], mutedStrings:[0]),
+  'D':   ChordDiagram(startFret:1, dots:[_Dot(1,2,1),_Dot(2,3,3),_Dot(3,2,2)], openStrings:[4],   mutedStrings:[0,5]),
+  'F':   ChordDiagram(startFret:1, dots:[_Dot(2,2,2),_Dot(3,3,3),_Dot(4,3,4)], hasBarre:true, barreFret:1, barreFrom:0, barreTo:5),
+  'Bm7': ChordDiagram(startFret:2, dots:[_Dot(1,2,3),_Dot(3,1,2)], mutedStrings:[0], hasBarre:true, barreFret:1, barreFrom:1, barreTo:5),
+};
+
+class ChordDiagramWidget extends StatelessWidget {
+  final String chord;
+  final double size;
+  const ChordDiagramWidget({super.key, required this.chord, this.size = 200});
+
+  @override
+  Widget build(BuildContext context) {
+    final d = kDiagramas[chord];
+    if (d == null) return const SizedBox();
+    return CustomPaint(
+      size: Size(size * 0.7, size),
+      painter: _ChordPainter(d, chord),
+    );
+  }
+}
+
+class _ChordPainter extends CustomPainter {
+  final ChordDiagram d;
+  final String chord;
+  _ChordPainter(this.d, this.chord);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const nS = 6; const nF = 4;
+    const tp = 36.0; const sp = 16.0;
+    final w = size.width - sp * 2;
+    final h = size.height - tp - 12;
+    final sw = w / (nS - 1);
+    final fh = h / nF;
+
+    final lp = Paint()..color = const Color(0xFF3A3A3A)..strokeWidth = 1.0..style = PaintingStyle.stroke;
+    final np = Paint()..color = const Color(0xFFAAAAAA)..strokeWidth = 3.5..style = PaintingStyle.stroke;
+    final gp = Paint()..color = cGreen.withOpacity(0.22)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)..style = PaintingStyle.fill;
+    final dp = Paint()..color = cGreen..style = PaintingStyle.fill;
+
+    if (d.hasBarre) {
+      final bx1 = sp + d.barreFrom * sw;
+      final bx2 = sp + d.barreTo * sw;
+      final by  = tp + (d.barreFret - 1) * fh + fh / 2;
+      final rr  = fh * 0.3;
+      final br  = RRect.fromLTRBR(bx1, by - rr, bx2, by + rr, Radius.circular(rr));
+      canvas.drawRRect(br, gp);
+      canvas.drawRRect(br, dp);
+    }
+
+    for (int s = 0; s < nS; s++) {
+      canvas.drawLine(Offset(sp + s * sw, tp), Offset(sp + s * sw, tp + h), lp);
+    }
+    canvas.drawLine(Offset(sp, tp), Offset(sp + w, tp), d.startFret == 1 ? np : lp);
+    for (int f = 1; f <= nF; f++) {
+      canvas.drawLine(Offset(sp, tp + f * fh), Offset(sp + w, tp + f * fh), lp);
+    }
+
+    if (d.startFret > 1) {
+      final tp2 = TextPainter(text: TextSpan(text: '${d.startFret}fr', style: const TextStyle(color: cMid, fontSize: 9)), textDirection: TextDirection.ltr)..layout();
+      tp2.paint(canvas, Offset(sp + w + 3, tp + fh / 2 - 6));
+    }
+
+    for (int s = 0; s < nS; s++) {
+      final x = sp + s * sw;
+      String? sym;
+      if (d.mutedStrings.contains(s)) sym = '×';
+      if (d.openStrings.contains(s))  sym = 'o';
+      if (sym != null) {
+        final tp2 = TextPainter(text: TextSpan(text: sym, style: const TextStyle(color: cMid, fontSize: 12, fontWeight: FontWeight.w300)), textDirection: TextDirection.ltr)..layout();
+        tp2.paint(canvas, Offset(x - tp2.width / 2, tp - 22));
+      }
+    }
+
+    for (final dot in d.dots) {
+      final x = sp + dot.string * sw;
+      final y = tp + (dot.fret - 1) * fh + fh / 2;
+      final r = fh * 0.3;
+      canvas.drawCircle(Offset(x, y), r + 5, gp);
+      canvas.drawCircle(Offset(x, y), r, dp);
+      final tp2 = TextPainter(text: TextSpan(text: '${dot.finger}', style: const TextStyle(color: bg, fontSize: 10, fontWeight: FontWeight.w700)), textDirection: TextDirection.ltr)..layout();
+      tp2.paint(canvas, Offset(x - tp2.width / 2, y - tp2.height / 2));
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ChordPainter o) => o.chord != chord;
+}
+
+// ── HOME SCREEN ──────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -62,24 +164,23 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final AudioService _audio = AudioService();
+  final AudioService _audio  = AudioService();
+  final AudioPlayer  _player = AudioPlayer();
 
-  // 0=splash, 1=inicio, 2=practica, 3=config
-  int     _page      = 0;
-  String  _nivel     = 'basico';
+  int     _page       = 0; // 0=splash 1=acordes 2=practica 3=api
   String? _acorde;
-  bool    _recording = false;
-  bool    _processing= false;
-  int     _progress  = 0;
+  bool    _recording  = false;
+  bool    _processing = false;
+  int     _progress   = 0;
   Timer?  _timer;
   Map<String, dynamic>? _result;
-  bool    _online    = false;
-  bool    _checking  = false;
+  bool    _online     = false;
+  bool    _checking   = false;
+  bool    _playing    = false;
 
-  // Mic test
-  bool    _micTesting = false;
-  bool?   _micOk;
-  Timer?  _micTimer;
+  // API monitor
+  List<Map<String, dynamic>> _pingHistory = [];
+  Timer? _pingTimer;
 
   late AnimationController _navCtrl;
   late Animation<Offset>   _navSlide;
@@ -91,14 +192,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _navCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
+    _navCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
     _navSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
         .animate(CurvedAnimation(parent: _navCtrl, curve: Curves.easeOutCubic));
     _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
       ..repeat(reverse: true);
     _pulseAnim = Tween(begin: 1.0, end: 1.12)
         .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-    _pageCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
+    _pageCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 260));
     _pageFade = CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut);
     _pageCtrl.forward();
     _checkServer();
@@ -107,18 +208,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _audio.dispose();
+    _player.dispose();
     _timer?.cancel();
-    _micTimer?.cancel();
+    _pingTimer?.cancel();
     _navCtrl.dispose();
     _pulseCtrl.dispose();
     _pageCtrl.dispose();
     super.dispose();
-  }
-
-  Map<String, List<String>> get _acordes {
-    if (_nivel == 'medio')    return acordesMedios;
-    if (_nivel == 'avanzado') return acordesAvanzados;
-    return acordesBasicos;
   }
 
   Future<void> _checkServer() async {
@@ -129,20 +225,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _goTo(int page) {
     HapticFeedback.lightImpact();
+    if (page == 3) _startPingMonitor();
+    else _pingTimer?.cancel();
     setState(() { _page = page; _result = null; });
     _pageCtrl.reset();
     _pageCtrl.forward();
     if (page != 0) _navCtrl.forward();
   }
 
-  void _setAcorde(String a) {
-    HapticFeedback.selectionClick();
-    setState(() { _acorde = a; _result = null; });
+  void _startPingMonitor() {
+    _pingTimer?.cancel();
+    _doPing();
+    _pingTimer = Timer.periodic(const Duration(seconds: 10), (_) => _doPing());
   }
 
-  void _randomAcorde() {
-    final keys = _acordes.keys.toList();
-    _setAcorde(keys[Random().nextInt(keys.length)]);
+  Future<void> _doPing() async {
+    final t0 = DateTime.now();
+    final ok = await context.read<ApiService>().checkHealth();
+    final ms = DateTime.now().difference(t0).inMilliseconds;
+    if (!mounted) return;
+    setState(() {
+      _online = ok;
+      _pingHistory.insert(0, {'ok': ok, 'ms': ms, 'time': DateTime.now()});
+      if (_pingHistory.length > 20) _pingHistory.removeLast();
+    });
+  }
+
+  Future<void> _playSample(String acorde) async {
+    if (_playing) { await _player.stop(); setState(() => _playing = false); return; }
+    final sample = kSamples[acorde];
+    if (sample == null) return;
+    setState(() => _playing = true);
+    await _player.play(AssetSource(sample));
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _playing = false);
+    });
   }
 
   Future<void> _startRec() async {
@@ -169,50 +286,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (_acorde == null) return;
     setState(() => _processing = true);
     try {
-      // Usar Naive Bayes: clasifica sin saber el acorde de antemano
       final r = await context.read<ApiService>().clasificarAcorde(path);
-      // Comparar predicción con el acorde esperado
-      final predicho = (r['acorde_predicho'] ?? '').toString().toUpperCase();
-      final esperado = _acorde!.toUpperCase();
-      final correcto = predicho == esperado;
+      // Adaptar respuesta de /clasificar al formato que espera la UI
+      final predicho  = r['acorde_predicho'] as String? ?? '';
+      final confianza = (r['confianza'] as num?)?.toDouble() ?? 0.0;
+      final correcto  = predicho.toUpperCase() == _acorde!.toUpperCase();
       setState(() => _result = {
-        ...r,
-        'es_correcto': correcto,
-        'acorde_esperado': _acorde,
-        'acorde_detectado': r['acorde_predicho'],
+        'es_correcto':      correcto,
+        'acorde_predicho':  predicho,
+        'confianza':        confianza,
+        'top5':             r['top5'] ?? [],
       });
       HapticFeedback.heavyImpact();
     } on TimeoutException {
       _snack('Tiempo de espera agotado.');
     } catch (e) {
-      final msg = e.toString();
-      if (msg.contains('503')) {
-        // Bayes no disponible, fallback a DSP
-        try {
-          final r = await context.read<ApiService>().verificarAcorde(path, _acorde!);
-          setState(() => _result = r);
-          HapticFeedback.heavyImpact();
-        } catch (_) {
-          _snack('Error al analizar el audio.');
-        }
-      } else {
-        _snack(msg.contains('SocketException') ? 'Sin conexión a la API.' : 'Error al analizar.');
-      }
+      _snack(e.toString().contains('SocketException') ? 'Sin conexión.' : 'Error al analizar.');
     } finally {
       setState(() => _processing = false);
-    }
-  }
-
-  Future<void> _testMic() async {
-    setState(() { _micTesting = true; _micOk = null; });
-    final ok = await _audio.startRecording();
-    if (ok) {
-      _micTimer = Timer(const Duration(seconds: 2), () async {
-        await _audio.stopRecording();
-        if (mounted) setState(() { _micTesting = false; _micOk = true; });
-      });
-    } else {
-      setState(() { _micTesting = false; _micOk = false; });
     }
   }
 
@@ -245,9 +336,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildPage() {
     switch (_page) {
       case 0:  return _buildSplash();
-      case 1:  return _buildInicio();
+      case 1:  return _buildAcordes();
       case 2:  return _buildPractica();
-      case 3:  return _buildConfig();
+      case 3:  return _buildApiMonitor();
       default: return _buildSplash();
     }
   }
@@ -260,13 +351,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
       padding: EdgeInsets.only(
-        top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
-      ),
+        top: 10, bottom: MediaQuery.of(context).padding.bottom + 10),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        _navItem(1, Icons.home_rounded,       Icons.home_outlined,       'Inicio'),
-        _navItem(2, Icons.music_note_rounded, Icons.music_note_outlined, 'Practicar'),
-        _navItem(3, Icons.settings_rounded,   Icons.settings_outlined,   'Ajustes'),
+        _navItem(1, Icons.library_music_rounded,  Icons.library_music_outlined,  'Acordes'),
+        _navItem(2, Icons.mic_rounded,             Icons.mic_none_rounded,         'Practicar'),
+        _navItem(3, Icons.monitor_heart_rounded,   Icons.monitor_heart_outlined,   'API'),
       ]),
     );
   }
@@ -279,8 +368,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(sel ? active : inactive,
-            color: sel ? cWhite : cDim, size: 22),
+          Icon(sel ? active : inactive, color: sel ? cWhite : cDim, size: 22),
           const SizedBox(height: 4),
           Text(label, style: TextStyle(
             fontSize: 10, letterSpacing: 0.5,
@@ -306,10 +394,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.25),
+              Colors.black.withOpacity(0.2),
               Colors.black.withOpacity(0.5),
               Colors.black.withOpacity(0.88),
               Colors.black,
@@ -322,16 +409,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Column(children: [
           const Spacer(flex: 3),
           const Text('Hola, músico.',
-            style: TextStyle(
-              fontSize: 38, fontWeight: FontWeight.w200,
-              color: cWhite, letterSpacing: -0.5,
-            )),
+            style: TextStyle(fontSize: 38, fontWeight: FontWeight.w200,
+              color: cWhite, letterSpacing: -0.5)),
           const SizedBox(height: 8),
           Text('Toca. Aprende. Mejora.',
-            style: TextStyle(
-              fontSize: 12, color: cWhite.withOpacity(0.45),
-              letterSpacing: 2.5,
-            )),
+            style: TextStyle(fontSize: 12,
+              color: cWhite.withOpacity(0.45), letterSpacing: 2.5)),
           const Spacer(flex: 4),
           GestureDetector(
             onTap: () => _goTo(1),
@@ -340,24 +423,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 17),
               decoration: BoxDecoration(
-                color: cWhite,
-                borderRadius: BorderRadius.circular(32),
-              ),
+                color: cWhite, borderRadius: BorderRadius.circular(32)),
               child: const Text('Comenzar',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w600,
-                  color: bg, letterSpacing: 0.5,
-                )),
-            ),
-          ),
-          const SizedBox(height: 14),
-          GestureDetector(
-            onTap: () => _goTo(3),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Text('Configuración',
-                style: TextStyle(fontSize: 13, color: cWhite.withOpacity(0.35))),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
+                  color: bg, letterSpacing: 0.5)),
             ),
           ),
           const SizedBox(height: 28),
@@ -366,99 +436,87 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ]);
   }
 
-  // ── INICIO ───────────────────────────────────────────────
-  Widget _buildInicio() {
+  // ── ACORDES (lista con diagrama) ─────────────────────────
+  Widget _buildAcordes() {
     return SafeArea(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
           child: Row(children: [
-            const Text('Sonaris', style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.w300,
-              color: cWhite, letterSpacing: 1,
-            )),
+            const Text('Acordes', style: TextStyle(
+              fontSize: 22, fontWeight: FontWeight.w200, color: cWhite, letterSpacing: 0.5)),
             const Spacer(),
-            // Indicador de conexión
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _checkServer,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
-                width: 7, height: 7,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _checking ? cAmber : _online ? cGreen : cRed,
-                  boxShadow: [BoxShadow(
-                    color: (_checking ? cAmber : _online ? cGreen : cRed).withOpacity(0.6),
-                    blurRadius: 6,
-                  )],
-                ),
-              ),
-            ),
+            _statusDot(),
           ]),
         ),
-        const SizedBox(height: 32),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Text('¿Qué quieres\npracticar hoy?',
-            style: TextStyle(
-              fontSize: 30, fontWeight: FontWeight.w200,
-              color: cWhite, height: 1.2,
-            )),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text('${kAcordes.length} acordes disponibles',
+            style: const TextStyle(fontSize: 12, color: cMid)),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              _levelCard('Básico', 'Fundamentos y acordes abiertos',
-                  '${acordesBasicos.length} acordes', 'basico', cGreen),
-              const SizedBox(height: 10),
-              _levelCard('Intermedio', 'Cejillas y acordes con séptima',
-                  '${acordesMedios.length} acordes', 'medio', cAmber),
-              const SizedBox(height: 10),
-              _levelCard('Avanzado', 'Acordes complejos y variaciones',
-                  '${acordesAvanzados.length} acordes', 'avanzado', cRed),
-              const SizedBox(height: 100),
-            ],
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            physics: const BouncingScrollPhysics(),
+            itemCount: kAcordes.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (_, i) => _acordeCard(kAcordes[i]),
           ),
         ),
       ]),
     );
   }
 
-  Widget _levelCard(String title, String sub, String count, String nivel, Color color) {
+  Widget _acordeCard(String acorde) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        setState(() { _nivel = nivel; _acorde = null; _result = null; });
+        HapticFeedback.selectionClick();
+        setState(() { _acorde = acorde; _result = null; });
         _goTo(2);
       },
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: bgCard,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Row(children: [
-          Container(
-            width: 10, height: 10,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+          // Diagrama pequeño
+          SizedBox(
+            width: 70, height: 100,
+            child: ChordDiagramWidget(chord: acorde, size: 100),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 18),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.w500, color: cWhite)),
-            const SizedBox(height: 3),
-            Text(sub, style: const TextStyle(fontSize: 12, color: cMid)),
+            Row(children: [
+              Text(acorde, style: const TextStyle(
+                fontSize: 28, fontWeight: FontWeight.w200, color: cWhite, height: 1)),
+              const SizedBox(width: 10),
+              Text(kNombres[acorde] ?? '', style: const TextStyle(
+                fontSize: 11, color: cMid)),
+            ]),
+            const SizedBox(height: 8),
+            Wrap(spacing: 5, children: (kNotas[acorde] ?? []).map((n) =>
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(n, style: const TextStyle(fontSize: 11, color: cWhite)),
+              )
+            ).toList()),
+            const SizedBox(height: 10),
+            Text(kDescripcion[acorde] ?? '',
+              style: const TextStyle(fontSize: 11, color: cMid, height: 1.4),
+              maxLines: 2, overflow: TextOverflow.ellipsis),
           ])),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(count, style: TextStyle(
-              fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            const Icon(Icons.arrow_forward_ios_rounded, color: cDim, size: 11),
-          ]),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward_ios_rounded, color: cDim, size: 12),
         ]),
       ),
     );
@@ -467,42 +525,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ── PRÁCTICA ─────────────────────────────────────────────
   Widget _buildPractica() {
     final correcto = _result?['es_correcto'] == true;
-    final notas = _acorde != null ? (_acordes[_acorde!] ?? []) : [];
 
     return Column(children: [
+      // Header
       Container(
         color: bg,
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 12,
-          left: 20, right: 20, bottom: 12,
-        ),
+          left: 20, right: 20, bottom: 12),
         child: Row(children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => _goTo(1),
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(Icons.arrow_back_ios_new_rounded, color: cMid, size: 18),
-            ),
+            child: const Padding(padding: EdgeInsets.all(8),
+              child: Icon(Icons.arrow_back_ios_new_rounded, color: cMid, size: 18)),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(
-            _nivel == 'basico' ? 'Básico'
-              : _nivel == 'medio' ? 'Intermedio' : 'Avanzado',
-            style: const TextStyle(fontSize: 16, color: cWhite, fontWeight: FontWeight.w400),
-          )),
+          const Expanded(child: Text('Practicar',
+            style: TextStyle(fontSize: 16, color: cWhite, fontWeight: FontWeight.w300))),
+          // Botón aleatorio
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: _randomAcorde,
+            onTap: () {
+              final r = kAcordes[Random().nextInt(kAcordes.length)];
+              setState(() { _acorde = r; _result = null; });
+            },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: bgCard2, borderRadius: BorderRadius.circular(20),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(20)),
               child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.shuffle_rounded, color: cMid, size: 14),
-                SizedBox(width: 6),
-                Text('Aleatorio', style: TextStyle(fontSize: 12, color: cMid)),
+                Icon(Icons.shuffle_rounded, color: cMid, size: 13),
+                SizedBox(width: 5),
+                Text('Aleatorio', style: TextStyle(fontSize: 11, color: cMid)),
               ]),
             ),
           ),
@@ -512,30 +566,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       Expanded(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: Column(children: [
-            // Grid de acordes
+            // Selector de acordes
             Wrap(
               spacing: 8, runSpacing: 8,
-              children: _acordes.keys.map((a) {
+              children: kAcordes.map((a) {
                 final sel = _acorde == a;
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => _setAcorde(a),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() { _acorde = a; _result = null; });
+                  },
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     decoration: BoxDecoration(
-                      color: sel ? cWhite.withOpacity(0.1) : bgCard,
+                      color: sel ? cGreen.withOpacity(0.1) : bgCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: sel ? cWhite.withOpacity(0.5) : Colors.white.withOpacity(0.06),
+                        color: sel ? cGreen.withOpacity(0.6) : Colors.white.withOpacity(0.06),
                         width: sel ? 1.5 : 1,
                       ),
                     ),
                     child: Text(a, style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600,
-                      color: sel ? cWhite : cMid,
+                      fontSize: 15, fontWeight: FontWeight.w600,
+                      color: sel ? cGreen : cMid,
                     )),
                   ),
                 );
@@ -543,7 +600,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
 
             if (_acorde != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              // Card principal con diagrama
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -551,36 +609,71 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildFretboard(_acorde!),
-                  const SizedBox(width: 20),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(_acorde!, style: const TextStyle(
-                      fontSize: 52, fontWeight: FontWeight.w100,
-                      color: cWhite, height: 1,
-                    )),
-                    const SizedBox(height: 4),
-                    Text(chordNames[_acorde!] ?? '', style: const TextStyle(
-                      fontSize: 11, color: cMid,
-                    )),
-                    const SizedBox(height: 16),
-                    const Text('NOTAS', style: TextStyle(
-                      fontSize: 9, color: cDim, letterSpacing: 2,
-                    )),
-                    const SizedBox(height: 8),
-                    Wrap(spacing: 6, runSpacing: 6,
-                      children: notas.map((n) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                          borderRadius: BorderRadius.circular(8),
+                child: Column(children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    // Diagrama grande
+                    ChordDiagramWidget(chord: _acorde!, size: 200),
+                    const SizedBox(width: 20),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(_acorde!, style: const TextStyle(
+                        fontSize: 56, fontWeight: FontWeight.w100, color: cWhite, height: 1)),
+                      const SizedBox(height: 4),
+                      Text(kNombres[_acorde!] ?? '',
+                        style: const TextStyle(fontSize: 11, color: cMid)),
+                      const SizedBox(height: 16),
+                      const Text('NOTAS', style: TextStyle(
+                        fontSize: 9, color: cDim, letterSpacing: 2)),
+                      const SizedBox(height: 8),
+                      Wrap(spacing: 6, runSpacing: 6,
+                        children: (kNotas[_acorde!] ?? []).map((n) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(n, style: const TextStyle(
+                            fontSize: 12, color: cWhite, fontWeight: FontWeight.w500)),
+                        )).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                      // Botón escuchar muestra
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _playSample(_acorde!),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: _playing ? cGreen.withOpacity(0.12) : bgCard2,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _playing ? cGreen.withOpacity(0.4) : Colors.white.withOpacity(0.08)),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            Icon(_playing ? Icons.stop_rounded : Icons.volume_up_rounded,
+                              color: _playing ? cGreen : cMid, size: 14),
+                            const SizedBox(width: 6),
+                            Text(_playing ? 'Detener' : 'Escuchar',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: _playing ? cGreen : cMid)),
+                          ]),
                         ),
-                        child: Text(n, style: const TextStyle(
-                          fontSize: 12, color: cWhite, fontWeight: FontWeight.w500,
-                        )),
-                      )).toList(),
+                      ),
+                    ])),
+                  ]),
+                  const SizedBox(height: 14),
+                  // Descripción
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: bgCard2,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ])),
+                    child: Text(kDescripcion[_acorde!] ?? '',
+                      style: const TextStyle(fontSize: 12, color: cMid, height: 1.5)),
+                  ),
                 ]),
               ),
             ],
@@ -590,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _buildResultCard(correcto),
             ],
 
-            const SizedBox(height: 110),
+            const SizedBox(height: 120),
           ]),
         ),
       ),
@@ -599,11 +692,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ]);
   }
 
-  // ── RESULTADO ────────────────────────────────────────────
   Widget _buildResultCard(bool correcto) {
-    final confianza = (_result!['confianza'] ?? 0).toStringAsFixed(0);
-    final predicho  = _result!['acorde_predicho'] ?? _result!['acorde_detectado'] ?? '—';
-    final top5      = _result!['top5'] as List<dynamic>?;
+    final confianza  = (_result!['confianza'] ?? 0).toStringAsFixed(0);
+    final predicho   = _result!['acorde_predicho'] ?? '';
+    final top5       = List<Map<String, dynamic>>.from(
+        (_result!['top5'] as List? ?? []).map((e) => Map<String, dynamic>.from(e)));
 
     return Container(
       width: double.infinity,
@@ -612,69 +705,54 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         color: bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: correcto ? cGreen.withOpacity(0.25) : cRed.withOpacity(0.18),
-        ),
+          color: correcto ? cGreen.withOpacity(0.3) : cRed.withOpacity(0.2)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Container(width: 6, height: 6,
+          Container(width: 7, height: 7,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: correcto ? cGreen : cRed,
               boxShadow: [BoxShadow(
-                color: (correcto ? cGreen : cRed).withOpacity(0.5),
-                blurRadius: 6,
-              )],
+                color: (correcto ? cGreen : cRed).withOpacity(0.5), blurRadius: 6)],
             )),
           const SizedBox(width: 10),
-          Text(correcto ? 'Correcto' : 'Intenta de nuevo',
-            style: TextStyle(
-              fontSize: 15, fontWeight: FontWeight.w500,
-              color: correcto ? cGreen : cRed,
-            )),
+          Text(correcto ? '¡Correcto!' : 'Intenta de nuevo',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500,
+              color: correcto ? cGreen : cRed)),
           const Spacer(),
           Text('$confianza%', style: const TextStyle(fontSize: 12, color: cDim)),
         ]),
         const SizedBox(height: 10),
-        Text('Detecté: $predicho',
-          style: const TextStyle(fontSize: 13, color: cMid)),
-        if (!correcto && _acorde != null) ...[
-          const SizedBox(height: 4),
-          Text('Esperaba: $_acorde',
-            style: const TextStyle(fontSize: 12, color: cDim)),
-        ],
-        // Top 3 probabilidades
-        if (top5 != null && top5.isNotEmpty) ...[
-          const SizedBox(height: 14),
+        Text('Detectado: $predicho',
+          style: const TextStyle(fontSize: 13, color: cWhite)),
+        if (top5.isNotEmpty) ...[
+          const SizedBox(height: 12),
           const Text('PROBABILIDADES', style: TextStyle(
             fontSize: 9, color: cDim, letterSpacing: 2)),
           const SizedBox(height: 8),
-          ...top5.take(3).map((item) {
-            final a = item['acorde'] as String;
-            final p = (item['probabilidad'] as num).toDouble();
-            final isTop = a == predicho;
+          ...top5.take(3).map((e) {
+            final pct = (e['probabilidad'] as num?)?.toDouble() ?? 0;
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(children: [
                 SizedBox(width: 36,
-                  child: Text(a, style: TextStyle(
-                    fontSize: 12, color: isTop ? cWhite : cMid,
-                    fontWeight: isTop ? FontWeight.w600 : FontWeight.w400,
-                  ))),
+                  child: Text(e['acorde'] ?? '',
+                    style: const TextStyle(fontSize: 12, color: cWhite))),
                 const SizedBox(width: 8),
                 Expanded(child: ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(
-                    value: p / 100,
+                    value: pct / 100,
                     minHeight: 3,
                     backgroundColor: Colors.white.withOpacity(0.05),
-                    valueColor: AlwaysStoppedAnimation(isTop ? cGreen : cDim),
+                    valueColor: AlwaysStoppedAnimation(
+                      pct > 60 ? cGreen : pct > 30 ? cAmber : cDim),
                   ),
                 )),
                 const SizedBox(width: 8),
-                Text('${p.toStringAsFixed(0)}%',
-                  style: TextStyle(fontSize: 11,
-                    color: isTop ? cGreen : cDim)),
+                Text('${pct.toStringAsFixed(0)}%',
+                  style: const TextStyle(fontSize: 11, color: cMid)),
               ]),
             );
           }),
@@ -683,13 +761,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── BARRA GRABAR ─────────────────────────────────────────
   Widget _buildRecordBar() {
     return Container(
       padding: EdgeInsets.only(
         left: 20, right: 20, top: 14,
-        bottom: MediaQuery.of(context).padding.bottom + 80,
-      ),
+        bottom: MediaQuery.of(context).padding.bottom + 80),
       decoration: BoxDecoration(
         color: bg,
         border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
@@ -708,16 +784,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 color: _recording ? cRed.withOpacity(0.12) : bgCard2,
                 border: Border.all(
                   color: _recording ? cRed : Colors.white.withOpacity(0.1),
-                  width: 1.5,
-                ),
+                  width: 1.5),
               ),
               child: _processing
                 ? const Padding(padding: EdgeInsets.all(16),
                     child: CircularProgressIndicator(strokeWidth: 1.5, color: cMid))
-                : Icon(
-                    _recording ? Icons.stop_rounded : Icons.mic_rounded,
-                    color: _recording ? cRed : cMid, size: 26,
-                  ),
+                : Icon(_recording ? Icons.stop_rounded : Icons.mic_rounded,
+                    color: _recording ? cRed : cMid, size: 26),
             ),
           ),
         ),
@@ -726,14 +799,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Text(
             _processing ? 'Analizando con IA...'
               : _recording ? 'ESCUCHANDO'
-              : _acorde != null ? '¡Tu turno!\nToca el acorde'
+              : _acorde != null ? 'Toca el acorde y graba'
               : 'Selecciona un acorde',
             style: TextStyle(
               fontSize: _recording ? 11 : 14,
               color: _recording ? cGreen : cWhite,
               letterSpacing: _recording ? 2.5 : 0,
-              fontWeight: FontWeight.w300, height: 1.4,
-            ),
+              fontWeight: FontWeight.w300, height: 1.4),
           ),
           if (_recording) ...[
             const SizedBox(height: 8),
@@ -752,35 +824,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── CONFIG ───────────────────────────────────────────────
-  Widget _buildConfig() {
+  // ── API MONITOR ──────────────────────────────────────────
+  Widget _buildApiMonitor() {
     return SafeArea(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
           child: Row(children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _goTo(1),
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.arrow_back_ios_new_rounded, color: cMid, size: 18),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text('Ajustes', style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.w300, color: cWhite,
-            )),
+            const Text('API Monitor', style: TextStyle(
+              fontSize: 22, fontWeight: FontWeight.w200, color: cWhite)),
+            const Spacer(),
+            _statusDot(),
           ]),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text('sonarisapi.onrender.com',
+            style: const TextStyle(fontSize: 11, color: cDim)),
+        ),
+        const SizedBox(height: 20),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
             physics: const BouncingScrollPhysics(),
             children: [
-              _sectionLabel('CONEXIÓN'),
-              const SizedBox(height: 10),
+              // Estado general
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -788,70 +857,47 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
-                child: Column(children: [
-                  Row(children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      width: 8, height: 8,
+                child: Row(children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    width: 10, height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _checking ? cAmber : _online ? cGreen : cRed,
+                      boxShadow: [BoxShadow(
+                        color: (_checking ? cAmber : _online ? cGreen : cRed).withOpacity(0.5),
+                        blurRadius: 8)],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(
+                      _checking ? 'Verificando...' : _online ? 'Online' : 'Offline',
+                      style: const TextStyle(fontSize: 15, color: cWhite, fontWeight: FontWeight.w400)),
+                    const SizedBox(height: 2),
+                    Text('Modelo: MLP · 6 acordes · 99.7% acc',
+                      style: const TextStyle(fontSize: 11, color: cDim)),
+                  ])),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _doPing,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _checking ? cAmber : _online ? cGreen : cRed,
-                        boxShadow: [BoxShadow(
-                          color: (_checking ? cAmber : _online ? cGreen : cRed).withOpacity(0.5),
-                          blurRadius: 8,
-                        )],
-                      ),
+                        color: bgCard2, borderRadius: BorderRadius.circular(10)),
+                      child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.refresh_rounded, color: cMid, size: 14),
+                        SizedBox(width: 5),
+                        Text('Ping', style: TextStyle(fontSize: 11, color: cMid)),
+                      ]),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(
-                        _checking ? 'Verificando...' : _online ? 'API conectada' : 'Sin conexión',
-                        style: const TextStyle(fontSize: 14, color: cWhite, fontWeight: FontWeight.w400),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text('sonarisapi.onrender.com',
-                          style: TextStyle(fontSize: 11, color: cDim)),
-                    ])),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _checking ? null : _checkServer,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: bgCard2, borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: _checking
-                          ? const SizedBox(width: 14, height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 1.5, color: cMid))
-                          : const Row(mainAxisSize: MainAxisSize.min, children: [
-                              Icon(Icons.refresh_rounded, color: cMid, size: 14),
-                              SizedBox(width: 5),
-                              Text('Reconectar', style: TextStyle(fontSize: 11, color: cMid)),
-                            ]),
-                      ),
-                    ),
-                  ]),
-                  if (!_online && !_checking) ...[
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: cRed.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: cRed.withOpacity(0.12)),
-                      ),
-                      child: const Text(
-                        'Render free tier puede tardar ~30s en despertar. Toca Reconectar.',
-                        style: TextStyle(fontSize: 11, color: Color(0xFFFF8080), height: 1.5),
-                      ),
-                    ),
-                  ],
+                  ),
                 ]),
               ),
 
-              const SizedBox(height: 20),
-              _sectionLabel('MICRÓFONO'),
               const SizedBox(height: 10),
+
+              // Endpoints
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -859,91 +905,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
-                child: Column(children: [
-                  Row(children: [
-                    Container(
-                      width: 40, height: 40,
-                      decoration: BoxDecoration(
-                        color: bgCard2, borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.mic_rounded, color: cMid, size: 20),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('Prueba de micrófono',
-                          style: TextStyle(fontSize: 14, color: cWhite, fontWeight: FontWeight.w400)),
-                      const SizedBox(height: 2),
-                      Text(
-                        _micTesting ? 'Grabando 2 segundos...'
-                          : _micOk == true  ? 'Micrófono funcionando ✓'
-                          : _micOk == false ? 'Sin permiso de micrófono'
-                          : 'Verifica que el micrófono funcione',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: _micOk == true ? cGreen
-                              : _micOk == false ? cRed : cDim,
-                        ),
-                      ),
-                    ])),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _micTesting ? null : _testMic,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: bgCard2, borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: _micTesting
-                          ? const SizedBox(width: 14, height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 1.5, color: cMid))
-                          : const Text('Probar', style: TextStyle(fontSize: 11, color: cMid)),
-                      ),
-                    ),
-                  ]),
-                  if (_micOk == false) ...[
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: cRed.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: cRed.withOpacity(0.12)),
-                      ),
-                      child: const Text(
-                        'Ve a Ajustes → Privacidad → Micrófono → Sonaris y activa el permiso.',
-                        style: TextStyle(fontSize: 11, color: Color(0xFFFF8080), height: 1.5),
-                      ),
-                    ),
-                  ],
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('ENDPOINTS', style: TextStyle(
+                    fontSize: 9, color: cDim, letterSpacing: 2)),
+                  const SizedBox(height: 12),
+                  _endpointRow('POST', '/clasificar', 'MLP · 6 acordes', cGreen),
+                  const SizedBox(height: 8),
+                  _endpointRow('POST', '/verificar',  'DSP fallback',    cAmber),
+                  const SizedBox(height: 8),
+                  _endpointRow('GET',  '/health',     'Health check',    cMid),
+                  const SizedBox(height: 8),
+                  _endpointRow('GET',  '/acordes',    'Lista acordes',   cMid),
                 ]),
               ),
 
-              const SizedBox(height: 20),
-              _sectionLabel('MODELO'),
               const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: bgCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
-                ),
-                child: const Row(children: [
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Naive Bayes', style: TextStyle(
-                      fontSize: 14, color: cWhite, fontWeight: FontWeight.w400)),
-                    SizedBox(height: 2),
-                    Text('Clasificación probabilística de acordes',
-                        style: TextStyle(fontSize: 11, color: cDim)),
-                  ]),
-                  Spacer(),
-                  Text('85%', style: TextStyle(
-                    fontSize: 13, color: cGreen, fontWeight: FontWeight.w600)),
-                ]),
-              ),
 
-              const SizedBox(height: 20),
-              _sectionLabel('APP'),
+              // Historial de pings
+              if (_pingHistory.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: bgCard,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      const Text('HISTORIAL DE PINGS', style: TextStyle(
+                        fontSize: 9, color: cDim, letterSpacing: 2)),
+                      const Spacer(),
+                      Text('auto cada 10s', style: const TextStyle(
+                        fontSize: 9, color: cDim)),
+                    ]),
+                    const SizedBox(height: 12),
+                    ..._pingHistory.take(8).map((p) {
+                      final ok = p['ok'] as bool;
+                      final ms = p['ms'] as int;
+                      final t  = p['time'] as DateTime;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(children: [
+                          Container(width: 6, height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: ok ? cGreen : cRed)),
+                          const SizedBox(width: 10),
+                          Text('${t.hour.toString().padLeft(2,'0')}:${t.minute.toString().padLeft(2,'0')}:${t.second.toString().padLeft(2,'0')}',
+                            style: const TextStyle(fontSize: 11, color: cMid)),
+                          const Spacer(),
+                          Text(ok ? '${ms}ms' : 'timeout',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: ok ? (ms < 500 ? cGreen : ms < 1500 ? cAmber : cRed) : cRed)),
+                        ]),
+                      );
+                    }),
+                  ]),
+                ),
+              ],
+
+              // Info modelo
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(18),
@@ -952,16 +974,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
-                child: const Row(children: [
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Sonaris', style: TextStyle(
-                      fontSize: 14, color: cWhite, fontWeight: FontWeight.w400)),
-                    SizedBox(height: 2),
-                    Text('v1.0.0', style: TextStyle(fontSize: 11, color: cDim)),
-                  ]),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('MODELO', style: TextStyle(
+                    fontSize: 9, color: cDim, letterSpacing: 2)),
+                  const SizedBox(height: 12),
+                  _infoRow('Tipo',      'MLP (sklearn)'),
+                  _infoRow('Capas',     '128 → 64 → 6'),
+                  _infoRow('Dataset',   '12,360 archivos WAV reales'),
+                  _infoRow('Acordes',   'A · Am · C · D · F · Bm7'),
+                  _infoRow('Accuracy',  '99.73%'),
+                  _infoRow('Features',  '31 (chroma + spectral + pitch)'),
                 ]),
               ),
-              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -969,68 +993,51 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _sectionLabel(String label) => Text(label,
-    style: const TextStyle(fontSize: 10, color: cDim, letterSpacing: 2, fontWeight: FontWeight.w500));
-
-  // ── FRETBOARD ────────────────────────────────────────────
-  Widget _buildFretboard(String acorde) {
-    final dots = chordFrets[acorde] ?? [];
-    const s = 6; const f = 4;
-    const cW = 26.0; const cH = 22.0; const dR = 8.0;
-    return Container(
-      width: cW * s + 16,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: bgCard2, borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-      ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Container(height: 3, margin: const EdgeInsets.only(bottom: 2),
-          decoration: BoxDecoration(
-            color: cWhite.withOpacity(0.35), borderRadius: BorderRadius.circular(2))),
-        SizedBox(
-          width: cW * s, height: cH * f,
-          child: CustomPaint(painter: _FretPainter(
-            dots: dots, strings: s, frets: f, cW: cW, cH: cH, dR: dR)),
+  Widget _endpointRow(String method, String path, String desc, Color color) {
+    return Row(children: [
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(5),
         ),
+        child: Text(method, style: TextStyle(
+          fontSize: 9, color: color, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+      ),
+      const SizedBox(width: 10),
+      Text(path, style: const TextStyle(fontSize: 12, color: cWhite, fontFamily: 'monospace')),
+      const Spacer(),
+      Text(desc, style: const TextStyle(fontSize: 11, color: cDim)),
+    ]);
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(children: [
+        SizedBox(width: 80,
+          child: Text(label, style: const TextStyle(fontSize: 12, color: cMid))),
+        Expanded(child: Text(value,
+          style: const TextStyle(fontSize: 12, color: cWhite))),
       ]),
     );
   }
-}
 
-// ── FRETBOARD PAINTER ────────────────────────────────────
-class _FretPainter extends CustomPainter {
-  final List<List<int>> dots;
-  final int strings, frets;
-  final double cW, cH, dR;
-  const _FretPainter({required this.dots, required this.strings,
-    required this.frets, required this.cW, required this.cH, required this.dR});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final line = Paint()..color = Colors.white.withOpacity(0.09)..strokeWidth = 0.8;
-    for (int s = 0; s < strings; s++) {
-      final x = s * cW + cW / 2;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), line);
-    }
-    for (int f = 0; f <= frets; f++) {
-      canvas.drawLine(Offset(0, f * cH), Offset(size.width, f * cH), line);
-    }
-    final dot  = Paint()..color = const Color(0xFFF0F0F0);
-    final glow = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    for (final d in dots) {
-      if (d.length < 2) continue;
-      final s = d[0]; final f = d[1];
-      if (s < 0 || s >= strings || f < 1 || f > frets) continue;
-      final x = s * cW + cW / 2;
-      final y = (f - 1) * cH + cH / 2;
-      canvas.drawCircle(Offset(x, y), dR + 5, glow);
-      canvas.drawCircle(Offset(x, y), dR, dot);
-    }
+  Widget _statusDot() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _checkServer,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        width: 7, height: 7,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _checking ? cAmber : _online ? cGreen : cRed,
+          boxShadow: [BoxShadow(
+            color: (_checking ? cAmber : _online ? cGreen : cRed).withOpacity(0.6),
+            blurRadius: 6)],
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(_FretPainter o) => o.dots != dots;
 }
