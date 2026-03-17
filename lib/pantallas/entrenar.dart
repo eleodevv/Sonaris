@@ -7,6 +7,8 @@ import '../constantes/acordes.dart';
 import '../services/api_service.dart';
 import '../services/audio_service.dart';
 
+const _baseUrl = 'https://sonarisapi.onrender.com';
+
 const int _metaPorAcorde = 20;
 
 class PantallaEntrenar extends StatefulWidget {
@@ -153,6 +155,10 @@ class _EstadoEntrenar extends State<PantallaEntrenar> {
                     alReentrenar: _reentrenar,
                     conteo: _conteo,
                   ),
+                  if ((_conteo.values.fold(0, (a, b) => a + b)) > 0) ...[
+                    const SizedBox(height: 10),
+                    _BotonExportar(),
+                  ],
                 ],
               ),
         ),
@@ -309,5 +315,48 @@ class _BotonReentrenar extends StatelessWidget {
         ),
       ),
     ]);
+  }
+}
+
+class _BotonExportar extends StatelessWidget {
+  const _BotonExportar();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        // Copia la URL al clipboard para que el usuario la abra en el navegador
+        Clipboard.setData(const ClipboardData(
+          text: '$_baseUrl/samples/descargar',
+        ));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text(
+            'URL copiada · pégala en el navegador para descargar el CSV',
+            style: TextStyle(color: Color(0xFFF0F0F0), fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFF1A1A1A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          duration: const Duration(seconds: 4),
+        ));
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.download_rounded, color: Color(0xFF777777), size: 16),
+          SizedBox(width: 8),
+          Text('Exportar mis datos (CSV)',
+            style: TextStyle(fontSize: 13, color: Color(0xFF777777))),
+        ]),
+      ),
+    );
   }
 }
