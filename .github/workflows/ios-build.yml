@@ -20,28 +20,21 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Generate Xcode configs
-        run: flutter build ios --config-only --no-codesign
+      - name: Build iOS simulator (no codesign needed)
+        run: flutter build ios --simulator --debug
 
-      - name: Pod install
-        run: pod install
-        working-directory: ios
-
-      - name: Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign
-
-      - name: Create IPA
+      - name: Create IPA from simulator build
         run: |
           mkdir -p Payload
           mv Runner.app Payload/
           zip -qq -r -9 FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphoneos
+        working-directory: build/ios/iphonesimulator
 
       - name: Upload IPA to release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: build/ios/iphoneos/FlutterIpaExport.ipa
+          artifacts: build/ios/iphonesimulator/FlutterIpaExport.ipa
           tag: v1.0
           allowUpdates: true
-          body: "Sonaris App - Detección de acordes con DSP"
+          body: "Sonaris App - Build simulador iOS"
