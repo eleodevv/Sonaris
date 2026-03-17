@@ -27,7 +27,7 @@ class ApiService {
     if (acordeEsperado != null) {
       request.fields['acorde_esperado'] = acordeEsperado;
     }
-    # Timeout generoso para compensar latencia de DevTunnels + procesamiento
+    // Timeout generoso: DevTunnels + procesamiento DSP pueden tardar varios segundos
     var streamed = await request.send().timeout(const Duration(seconds: 25));
     var response = await http.Response.fromStream(streamed)
         .timeout(const Duration(seconds: 25));
