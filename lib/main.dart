@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'screens/home_screen.dart';
+import 'pantallas/home.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -27,7 +27,7 @@ class SonarisApp extends StatelessWidget {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
         ),
-        home: const HomeScreen(),
+        home: const PantallaHome(),
       ),
     );
   }

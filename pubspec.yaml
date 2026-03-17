@@ -25,20 +25,20 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/logo.png"
+  image_path: "assets/fondo.png"
   remove_alpha_ios: true
   background_color: "#000000"
   adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "assets/logo.png"
+  adaptive_icon_foreground: "assets/fondo.png"
 
 flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
     - assets/fondo.png
-    - assets/sample_A.wav
-    - assets/sample_Am.wav
-    - assets/sample_C.wav
-    - assets/sample_D.wav
-    - assets/sample_F.wav
-    - assets/sample_Bm7.wav
+    - assets/A-07-LAZARUS.wav
+    - assets/Am-08-LAZARUS.wav
+    - assets/C-05-AT2020.wav
+    - assets/D-01-LAZARUS.wav
+    - assets/F-07-LAZARUS.wav
+    - assets/Bm7-01-AT2020.wav
