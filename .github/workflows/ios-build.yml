@@ -3,38 +3,32 @@ name: iOS-ipa-build
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build-ios:
     name: 🎉 iOS Build
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-
-      - name: Flutter pub get
-        run: flutter pub get
-
-      - name: Build iOS simulator (no codesign needed)
-        run: flutter build ios --simulator --debug
-
-      - name: Create IPA from simulator build
-        run: |
-          mkdir -p Payload
-          mv Runner.app Payload/
-          zip -qq -r -9 FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphonesimulator
-
-      - name: Upload IPA to release
-        uses: ncipollo/release-action@v1
+          architecture: x64
+      - run: flutter pub get
+      - run: pod repo update
+        working-directory: ios
+      - run: flutter build ios --release --no-codesign
+      - run: mkdir Payload
+        working-directory: build/ios/iphoneos
+      - run: mv Runner.app/ Payload
+        working-directory: build/ios/iphoneos
+      - name: Zip output
+        run: zip -qq -r -9 FlutterIpaExport.ipa Payload
+        working-directory: build/ios/iphoneos
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: build/ios/iphonesimulator/FlutterIpaExport.ipa
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/ios/iphoneos/FlutterIpaExport.ipa
           tag: v1.0
-          allowUpdates: true
-          body: "Sonaris App - Build simulador iOS"
+          overwrite: true
+          body: "This is first release"
