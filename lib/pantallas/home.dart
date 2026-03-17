@@ -11,6 +11,7 @@ import 'splash.dart';
 import 'lista_acordes.dart';
 import 'practica.dart';
 import 'api_monitor.dart';
+import 'entrenar.dart';
 
 /// Pantalla raíz que maneja la navegación y el estado global
 class PantallaHome extends StatefulWidget {
@@ -77,8 +78,8 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
   // ── Navegación ────────────────────────────────────────────
   void _irA(int pagina) {
     HapticFeedback.lightImpact();
-    if (pagina == 3) _iniciarMonitorPing();
-    else _timerPing?.cancel();
+    if (pagina == 3) { _iniciarMonitorPing(); }
+    else { _timerPing?.cancel(); }
     setState(() { _pagina = pagina; _resultado = null; });
     _paginaCtrl.reset();
     _paginaCtrl.forward();
@@ -206,6 +207,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
         historialPings: _historialPings,
         alHacerPing: _hacerPing,
       );
+      case 4: return const PantallaEntrenar();
       default: return PantallaSplash(alComenzar: () => _irA(1));
     }
   }
@@ -312,15 +314,13 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
         color: tarjeta.withOpacity(0.97),
         border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom + 8,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 8),
       child: SizedBox(
         height: 64,
         child: Row(children: [
-          // Acordes
           Expanded(child: _itemNav(1, Icons.library_music_rounded, Icons.library_music_outlined, 'Acordes')),
-          // Botón central de grabar
+          Expanded(child: _itemNav(4, Icons.model_training_rounded, Icons.model_training_outlined, 'Mejorar')),
+          // Botón central mic
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: GestureDetector(
@@ -328,9 +328,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
               onTap: () {
                 if (!enPractica) _irA(2);
                 if (_procesando) return;
-                if (enPractica) {
-                  _grabando ? _detenerGrabacion() : _iniciarGrabacion();
-                }
+                if (enPractica) _grabando ? _detenerGrabacion() : _iniciarGrabacion();
               },
               child: ScaleTransition(
                 scale: _grabando ? _pulsoAnim : const AlwaysStoppedAnimation(1.0),
@@ -340,41 +338,31 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _grabando
-                        ? rojo.withOpacity(0.15)
-                        : enPractica
-                            ? verde.withOpacity(0.12)
-                            : tarjeta2,
+                      ? rojo.withOpacity(0.15)
+                      : enPractica ? verde.withOpacity(0.12) : tarjeta2,
                     border: Border.all(
-                      color: _grabando
-                          ? rojo
-                          : enPractica
-                              ? verde.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.12),
+                      color: _grabando ? rojo
+                        : enPractica ? verde.withOpacity(0.5)
+                        : Colors.white.withOpacity(0.12),
                       width: 1.5,
                     ),
-                    boxShadow: enPractica ? [
-                      BoxShadow(
-                        color: (_grabando ? rojo : verde).withOpacity(0.2),
-                        blurRadius: 12, spreadRadius: 1,
-                      ),
-                    ] : null,
+                    boxShadow: enPractica ? [BoxShadow(
+                      color: (_grabando ? rojo : verde).withOpacity(0.2),
+                      blurRadius: 12, spreadRadius: 1)] : null,
                   ),
                   child: _procesando
-                      ? const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(strokeWidth: 1.5, color: ambar),
-                        )
-                      : Icon(
-                          _grabando ? Icons.stop_rounded : Icons.mic_rounded,
-                          color: _grabando ? rojo : enPractica ? verde : medio,
-                          size: 24,
-                        ),
+                    ? const Padding(padding: EdgeInsets.all(16),
+                        child: CircularProgressIndicator(strokeWidth: 1.5, color: ambar))
+                    : Icon(
+                        _grabando ? Icons.stop_rounded : Icons.mic_rounded,
+                        color: _grabando ? rojo : enPractica ? verde : medio,
+                        size: 24),
                 ),
               ),
             ),
           ),
-          // API
           Expanded(child: _itemNav(3, Icons.monitor_heart_rounded, Icons.monitor_heart_outlined, 'API')),
+          Expanded(child: _itemNav(2, Icons.music_note_rounded, Icons.music_note_outlined, 'Practicar')),
         ]),
       ),
     );
