@@ -194,10 +194,11 @@ class TarjetaResultado extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300, color: color),
         ),
         const Spacer(),
-        Text(
-          '$confianza%',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w200, color: color),
-        ),
+        if (correcto)
+          Text(
+            '$confianza%',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w200, color: color),
+          ),
       ]),
     );
   }
