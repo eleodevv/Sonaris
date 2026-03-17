@@ -125,7 +125,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
     setState(() { _grabando = true; _progreso = 0; _resultado = null; });
     _temporizador = Timer.periodic(const Duration(milliseconds: 100), (t) {
       setState(() => _progreso++);
-      if (_progreso >= 30) { t.cancel(); _detenerGrabacion(); }
+      if (_progreso >= 50) { t.cancel(); _detenerGrabacion(); }
     });
   }
 
@@ -210,7 +210,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
     }
   }
 
-  // ── Pantalla de práctica (estado aquí para acceder a grabación) ──
+  // ── Pantalla de práctica ──────────────────────────────────
   Widget _construirPractica() {
     return Column(children: [
       // Encabezado
@@ -250,7 +250,36 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
           ),
         ]),
       ),
-
+      // Estado de grabación (solo cuando graba o procesa)
+      if (_grabando || _procesando)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          color: fondo,
+          child: Column(children: [
+            Text(
+              _procesando ? 'Analizando...' : 'ESCUCHANDO...',
+              style: TextStyle(
+                fontSize: 11,
+                color: _procesando ? ambar : verde,
+                letterSpacing: 2.5,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            if (_grabando) ...[
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: LinearProgressIndicator(
+                  value: _progreso / 50,
+                  minHeight: 2,
+                  backgroundColor: Colors.white.withOpacity(0.05),
+                  valueColor: const AlwaysStoppedAnimation(verde),
+                ),
+              ),
+            ],
+          ]),
+        ),
       Expanded(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -268,38 +297,86 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
               const SizedBox(height: 14),
               TarjetaResultado(resultado: _resultado!),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 100),
           ]),
         ),
-      ),
-
-      BarraGrabacion(
-        grabando: _grabando,
-        procesando: _procesando,
-        acorde: _acorde,
-        progreso: _progreso,
-        pulsoAnim: _pulsoAnim,
-        alTocar: _grabando ? _detenerGrabacion : _iniciarGrabacion,
       ),
     ]);
   }
 
-  // ── Nav bar ───────────────────────────────────────────────
+  // ── Nav bar con botón central de grabar ──────────────────
   Widget _construirNavBar() {
+    final enPractica = _pagina == 2;
     return Container(
       decoration: BoxDecoration(
         color: tarjeta.withOpacity(0.97),
         border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
       padding: EdgeInsets.only(
-        top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
       ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        _itemNav(1, Icons.library_music_rounded,  Icons.library_music_outlined,  'Acordes'),
-        _itemNav(2, Icons.mic_rounded,             Icons.mic_none_rounded,         'Practicar'),
-        _itemNav(3, Icons.monitor_heart_rounded,   Icons.monitor_heart_outlined,   'API'),
-      ]),
+      child: SizedBox(
+        height: 64,
+        child: Row(children: [
+          // Acordes
+          Expanded(child: _itemNav(1, Icons.library_music_rounded, Icons.library_music_outlined, 'Acordes')),
+          // Botón central de grabar
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if (!enPractica) _irA(2);
+                if (_procesando) return;
+                if (enPractica) {
+                  _grabando ? _detenerGrabacion() : _iniciarGrabacion();
+                }
+              },
+              child: ScaleTransition(
+                scale: _grabando ? _pulsoAnim : const AlwaysStoppedAnimation(1.0),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _grabando
+                        ? rojo.withOpacity(0.15)
+                        : enPractica
+                            ? verde.withOpacity(0.12)
+                            : tarjeta2,
+                    border: Border.all(
+                      color: _grabando
+                          ? rojo
+                          : enPractica
+                              ? verde.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.12),
+                      width: 1.5,
+                    ),
+                    boxShadow: enPractica ? [
+                      BoxShadow(
+                        color: (_grabando ? rojo : verde).withOpacity(0.2),
+                        blurRadius: 12, spreadRadius: 1,
+                      ),
+                    ] : null,
+                  ),
+                  child: _procesando
+                      ? const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(strokeWidth: 1.5, color: ambar),
+                        )
+                      : Icon(
+                          _grabando ? Icons.stop_rounded : Icons.mic_rounded,
+                          color: _grabando ? rojo : enPractica ? verde : medio,
+                          size: 24,
+                        ),
+                ),
+              ),
+            ),
+          ),
+          // API
+          Expanded(child: _itemNav(3, Icons.monitor_heart_rounded, Icons.monitor_heart_outlined, 'API')),
+        ]),
+      ),
     );
   }
 
@@ -308,25 +385,22 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _irA(idx),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(sel ? activo : inactivo, color: sel ? blanco : tenue, size: 22),
-          const SizedBox(height: 4),
-          Text(etiqueta, style: TextStyle(
-            fontSize: 10, letterSpacing: 0.5,
-            color: sel ? blanco : tenue,
-            fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-          )),
-          const SizedBox(height: 3),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: sel ? 14 : 0, height: 2,
-            decoration: BoxDecoration(
-              color: verde, borderRadius: BorderRadius.circular(1)),
-          ),
-        ]),
-      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(sel ? activo : inactivo, color: sel ? blanco : tenue, size: 22),
+        const SizedBox(height: 3),
+        Text(etiqueta, style: TextStyle(
+          fontSize: 10, letterSpacing: 0.5,
+          color: sel ? blanco : tenue,
+          fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+        )),
+        const SizedBox(height: 3),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: sel ? 14 : 0, height: 2,
+          decoration: BoxDecoration(
+            color: verde, borderRadius: BorderRadius.circular(1)),
+        ),
+      ]),
     );
   }
 }
