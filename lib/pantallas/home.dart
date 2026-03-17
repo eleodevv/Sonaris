@@ -182,8 +182,8 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
       body: Stack(children: [
         FadeTransition(opacity: _paginaFade, child: _construirPagina()),
         if (_pagina != 0)
-          Align(
-            alignment: Alignment.bottomCenter,
+          Positioned(
+            left: 0, right: 0, bottom: 0,
             child: SlideTransition(position: _navSlide, child: _construirNavBar()),
           ),
       ]),
@@ -304,88 +304,104 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
     ]);
   }
 
-  // ── Nav bar con botón central de grabar ──────────────────
+  // ── Nav bar flotante tipo pill ────────────────────────────
   Widget _construirNavBar() {
     final enPractica = _pagina == 2;
-    return Container(
-      decoration: BoxDecoration(
-        color: tarjeta.withOpacity(0.97),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20, right: 20,
+        bottom: MediaQuery.of(context).padding.bottom + 12,
       ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 8),
-      child: SizedBox(
-        height: 64,
+      child: Container(
+        height: 68,
+        decoration: BoxDecoration(
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(36),
+          border: Border.all(color: Colors.white.withOpacity(0.07)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 24, offset: const Offset(0, 8)),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(children: [
-          Expanded(child: _itemNav(1, Icons.library_music_rounded, Icons.library_music_outlined, 'Acordes')),
+          Expanded(child: _itemNav(1, Icons.library_music_rounded, 'Acordes')),
           // Botón central mic
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (!enPractica) _irA(2);
-                if (_procesando) return;
-                if (enPractica) _grabando ? _detenerGrabacion() : _iniciarGrabacion();
-              },
-              child: ScaleTransition(
-                scale: _grabando ? _pulsoAnim : const AlwaysStoppedAnimation(1.0),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _grabando
-                      ? rojo.withOpacity(0.15)
-                      : enPractica ? verde.withOpacity(0.12) : tarjeta2,
-                    border: Border.all(
-                      color: _grabando ? rojo
-                        : enPractica ? verde.withOpacity(0.5)
-                        : Colors.white.withOpacity(0.12),
-                      width: 1.5,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (!enPractica) { _irA(2); return; }
+              if (_procesando) return;
+              _grabando ? _detenerGrabacion() : _iniciarGrabacion();
+            },
+            child: ScaleTransition(
+              scale: _grabando ? _pulsoAnim : const AlwaysStoppedAnimation(1.0),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: 58, height: 58,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _grabando
+                      ? rojo
+                      : enPractica
+                          ? verde
+                          : const Color(0xFF222222),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_grabando ? rojo : enPractica ? verde : Colors.transparent)
+                          .withOpacity(0.35),
+                      blurRadius: 18, spreadRadius: 2,
                     ),
-                    boxShadow: enPractica ? [BoxShadow(
-                      color: (_grabando ? rojo : verde).withOpacity(0.2),
-                      blurRadius: 12, spreadRadius: 1)] : null,
-                  ),
-                  child: _procesando
-                    ? const Padding(padding: EdgeInsets.all(16),
+                  ],
+                ),
+                child: _procesando
+                    ? const Padding(
+                        padding: EdgeInsets.all(17),
                         child: CircularProgressIndicator(strokeWidth: 1.5, color: ambar))
                     : Icon(
                         _grabando ? Icons.stop_rounded : Icons.mic_rounded,
-                        color: _grabando ? rojo : enPractica ? verde : medio,
-                        size: 24),
-                ),
+                        color: enPractica || _grabando ? fondo : medio,
+                        size: 26),
               ),
             ),
           ),
-          Expanded(child: _itemNav(3, Icons.monitor_heart_rounded, Icons.monitor_heart_outlined, 'API')),
-          Expanded(child: _itemNav(2, Icons.music_note_rounded, Icons.music_note_outlined, 'Practicar')),
+          Expanded(child: _itemNav(3, Icons.monitor_heart_rounded, 'API')),
         ]),
       ),
     );
   }
 
-  Widget _itemNav(int idx, IconData activo, IconData inactivo, String etiqueta) {
+  Widget _itemNav(int idx, IconData icono, String etiqueta) {
     final sel = _pagina == idx;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _irA(idx),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(sel ? activo : inactivo, color: sel ? blanco : tenue, size: 22),
-        const SizedBox(height: 3),
-        Text(etiqueta, style: TextStyle(
-          fontSize: 10, letterSpacing: 0.5,
-          color: sel ? blanco : tenue,
-          fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-        )),
-        const SizedBox(height: 3),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: sel ? 14 : 0, height: 2,
-          decoration: BoxDecoration(
-            color: verde, borderRadius: BorderRadius.circular(1)),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: sel ? verde.withOpacity(0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          border: sel
+              ? Border.all(color: verde.withOpacity(0.25), width: 1)
+              : null,
         ),
-      ]),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icono,
+            color: sel ? verde : tenue,
+            size: 20),
+          const SizedBox(height: 3),
+          Text(etiqueta, style: TextStyle(
+            fontSize: 10,
+            letterSpacing: 0.3,
+            color: sel ? verde : tenue,
+            fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+          )),
+        ]),
+      ),
     );
   }
 }
