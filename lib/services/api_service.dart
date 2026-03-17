@@ -48,29 +48,4 @@ class ApiService {
     return {};
   }
 
-  Future<Map<String, dynamic>> subirSample(String audioPath, String acorde) async {
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/samples'));
-    request.files.add(await http.MultipartFile.fromPath('audio', audioPath,
-        filename: 'sample.wav'));
-    request.fields['acorde'] = acorde;
-    var streamed = await request.send().timeout(const Duration(seconds: 30));
-    var response = await http.Response.fromStream(streamed)
-        .timeout(const Duration(seconds: 30));
-    if (response.statusCode == 200) return json.decode(response.body);
-    throw Exception('Error ${response.statusCode}: ${response.body}');
-  }
-
-  Future<Map<String, dynamic>> estadoSamples() async {
-    final r = await http.get(Uri.parse('$baseUrl/samples/estado'))
-        .timeout(const Duration(seconds: 10));
-    if (r.statusCode == 200) return json.decode(r.body);
-    throw Exception('Error ${r.statusCode}');
-  }
-
-  Future<Map<String, dynamic>> reentrenar() async {
-    final r = await http.post(Uri.parse('$baseUrl/reentrenar'))
-        .timeout(const Duration(seconds: 120));
-    if (r.statusCode == 200) return json.decode(r.body);
-    throw Exception(json.decode(r.body)['detail'] ?? 'Error reentrenando');
-  }
 }
