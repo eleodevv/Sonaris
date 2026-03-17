@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:math';
@@ -30,37 +31,28 @@ const Map<String, String> chordNames = {
   'Gm':'SOL Menor','F#m':'FA# Menor',
 };
 const Map<String, List<List<int>>> chordFrets = {
-  'A':  [[1,2],[2,2],[3,2]],
-  'Am': [[1,2],[2,2],[3,1]],
-  'C':  [[1,3],[2,2],[4,1]],
-  'D':  [[1,3],[2,2],[3,3]],
-  'Dm': [[1,3],[2,2],[3,1]],
-  'E':  [[3,1],[4,2],[5,2]],
-  'Em': [[4,2],[5,2]],
-  'G':  [[0,3],[4,2],[5,3]],
-  'C7': [[1,3],[2,2],[3,3],[4,1]],
-  'G7': [[0,3],[1,1],[4,2],[5,1]],
+  'A':  [[1,2],[2,2],[3,2]],   'Am': [[1,2],[2,2],[3,1]],
+  'C':  [[1,3],[2,2],[4,1]],   'D':  [[1,3],[2,2],[3,3]],
+  'Dm': [[1,3],[2,2],[3,1]],   'E':  [[3,1],[4,2],[5,2]],
+  'Em': [[4,2],[5,2]],         'G':  [[0,3],[4,2],[5,3]],
+  'C7': [[1,3],[2,2],[3,3],[4,1]], 'G7': [[0,3],[1,1],[4,2],[5,1]],
   'F':  [[0,1],[1,1],[2,2],[3,3],[4,3],[5,1]],
-  'Bm': [[1,2],[2,4],[3,4],[4,3]],
-  'A7': [[1,2],[3,2]],
-  'E7': [[3,1],[4,2]],
-  'Am7':[[1,2],[3,1]],
-  'Cmaj7':[[1,3],[2,2],[3,4]],
-  'Dsus4':[[1,3],[2,3],[3,2]],
-  'Asus4':[[1,2],[2,2],[3,2]],
-  'Gm': [[0,3],[1,1],[2,2],[3,3],[4,3],[5,1]],
+  'Bm': [[1,2],[2,4],[3,4],[4,3]], 'A7': [[1,2],[3,2]],
+  'E7': [[3,1],[4,2]],         'Am7':[[1,2],[3,1]],
+  'Cmaj7':[[1,3],[2,2],[3,4]], 'Dsus4':[[1,3],[2,3],[3,2]],
+  'Asus4':[[1,2],[2,2],[3,2]], 'Gm': [[0,3],[1,1],[2,2],[3,3],[4,3],[5,1]],
   'F#m':[[0,2],[1,2],[2,4],[3,4],[4,3]],
 };
 
 // ── COLORS ───────────────────────────────────────────────
-const bg       = Color(0xFF080808);
-const bgCard   = Color(0xFF111111);
-const bgCard2  = Color(0xFF1A1A1A);
-const accent   = Color(0xFFE8E8E8);
-const accentDim= Color(0xFF666666);
-const accentG  = Color(0xFF00FF88);
-const textW    = Color(0xFFF5F5F5);
-const textD    = Color(0xFF555555);
+const bg      = Color(0xFF080808);
+const bgCard  = Color(0xFF111111);
+const bgCard2 = Color(0xFF1C1C1C);
+const cWhite  = Color(0xFFF0F0F0);
+const cDim    = Color(0xFF555555);
+const cMid    = Color(0xFF888888);
+const cGreen  = Color(0xFF00E676);
+const cRed    = Color(0xFFFF5252);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,43 +60,46 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final AudioService _audio = AudioService();
 
-  // nav: -1=splash, 0=inicio, 1=practica, 2=config
-  int     _page       = -1;
-  bool    _menuOpen   = false;
-  String  _nivel      = 'basico';
+  // 0=splash, 1=inicio, 2=practica, 3=config
+  int     _page      = 0;
+  String  _nivel     = 'basico';
   String? _acorde;
-  bool    _recording  = false;
-  bool    _processing = false;
-  int     _progress   = 0;
+  bool    _recording = false;
+  bool    _processing= false;
+  int     _progress  = 0;
   Timer?  _timer;
   Map<String, dynamic>? _result;
-  bool    _online     = false;
-  bool    _checking   = false;
+  bool    _online    = false;
+  bool    _checking  = false;
 
-  late AnimationController _menuCtrl;
-  late Animation<Offset>   _menuSlide;
+  // Mic test
+  bool    _micTesting   = false;
+  bool?   _micOk;
+  Timer?  _micTimer;
+
+  late AnimationController _navCtrl;
+  late Animation<Offset>   _navSlide;
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
-  late AnimationController _fadeCtrl;
-  late Animation<double>   _fadeAnim;
+  late AnimationController _pageCtrl;
+  late Animation<double>   _pageFade;
 
   @override
   void initState() {
     super.initState();
-    _menuCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 320));
-    _menuSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _menuCtrl, curve: Curves.easeOutCubic));
+    _navCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 380));
+    _navSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _navCtrl, curve: Curves.easeOutCubic));
     _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
       ..repeat(reverse: true);
-    _pulseAnim = Tween(begin: 1.0, end: 1.08)
+    _pulseAnim = Tween(begin: 1.0, end: 1.1)
         .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
-    _fadeCtrl.forward();
+    _pageCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _pageFade = CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut);
+    _pageCtrl.forward();
     _checkServer();
   }
 
@@ -112,9 +107,10 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _audio.dispose();
     _timer?.cancel();
-    _menuCtrl.dispose();
+    _micTimer?.cancel();
+    _navCtrl.dispose();
     _pulseCtrl.dispose();
-    _fadeCtrl.dispose();
+    _pageCtrl.dispose();
     super.dispose();
   }
 
@@ -130,19 +126,20 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) setState(() { _online = ok; _checking = false; });
   }
 
-  void _toggleMenu() {
-    setState(() => _menuOpen = !_menuOpen);
-    _menuOpen ? _menuCtrl.forward() : _menuCtrl.reverse();
-  }
-
   void _goTo(int page) {
-    setState(() { _page = page; _menuOpen = false; _result = null; });
-    _menuCtrl.reverse();
-    _fadeCtrl.reset();
-    _fadeCtrl.forward();
+    HapticFeedback.lightImpact();
+    setState(() { _page = page; _result = null; });
+    _pageCtrl.reset();
+    _pageCtrl.forward();
+    if (page != 0) _navCtrl.forward();
   }
 
-  void _setAcorde(String a) => setState(() { _acorde = a; _result = null; });
+  bool get _navVisible => _page != 0;
+
+  void _setAcorde(String a) {
+    HapticFeedback.selectionClick();
+    setState(() { _acorde = a; _result = null; });
+  }
 
   void _randomAcorde() {
     final keys = _acordes.keys.toList();
@@ -153,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (_acorde == null) { _snack('Selecciona un acorde primero'); return; }
     final ok = await _audio.startRecording();
     if (!ok) { _snack('Sin permiso de micrófono'); return; }
+    HapticFeedback.mediumImpact();
     setState(() { _recording = true; _progress = 0; _result = null; });
     _timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
       setState(() => _progress++);
@@ -162,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _stopRec() async {
     _timer?.cancel();
+    HapticFeedback.mediumImpact();
     final path = await _audio.stopRecording();
     setState(() { _recording = false; _progress = 0; });
     if (path != null) await _process(path);
@@ -172,27 +171,38 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       final r = await context.read<ApiService>().detectarAcorde(path, acordeEsperado: _acorde);
       setState(() => _result = r);
+      HapticFeedback.heavyImpact();
     } on TimeoutException {
-      _snack('Tiempo de espera agotado. Verifica tu conexión.');
+      _snack('Tiempo de espera agotado.');
     } catch (e) {
       final msg = e.toString();
-      if (msg.contains('SocketException') || msg.contains('Connection refused')) {
-        _snack('No se pudo conectar a la API.');
-      } else {
-        _snack('Error: ${msg.substring(0, msg.length.clamp(0, 60))}');
-      }
+      _snack(msg.contains('SocketException') ? 'Sin conexión a la API.' : 'Error al analizar.');
     } finally {
       setState(() => _processing = false);
     }
   }
 
+  Future<void> _testMic() async {
+    setState(() { _micTesting = true; _micOk = null; });
+    final ok = await _audio.startRecording();
+    if (ok) {
+      _micTimer = Timer(const Duration(seconds: 2), () async {
+        await _audio.stopRecording();
+        if (mounted) setState(() { _micTesting = false; _micOk = true; });
+      });
+    } else {
+      setState(() { _micTesting = false; _micOk = false; });
+    }
+  }
+
   void _snack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: const TextStyle(color: textW, fontSize: 13)),
+      content: Text(msg, style: const TextStyle(color: cWhite, fontSize: 13)),
       backgroundColor: bgCard2,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      duration: const Duration(seconds: 3),
     ));
   }
 
@@ -201,106 +211,252 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: bg,
       body: Stack(children: [
-        // Contenido principal
+        // Contenido con fade
         FadeTransition(
-          opacity: _fadeAnim,
-          child: _page == -1 ? _buildSplash()
-              : _page == 0   ? _buildInicio()
-              : _page == 1   ? _buildPractica()
-              :                _buildConfig(),
+          opacity: _pageFade,
+          child: _buildPage(),
         ),
-        // Overlay oscuro cuando menú abierto
-        if (_menuOpen)
-          GestureDetector(
-            onTap: _toggleMenu,
-            child: Container(color: Colors.black.withOpacity(0.6)),
+        // Nav bar inferior animada
+        if (_navVisible)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SlideTransition(position: _navSlide, child: _buildNavBar()),
           ),
-        // Menú deslizable desde abajo
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: SlideTransition(
-            position: _menuSlide,
-            child: _buildMenu(),
-          ),
-        ),
       ]),
     );
   }
 
-  // ── SPLASH / BIENVENIDA ──────────────────────────────────
-  Widget _buildSplash() {
-    return SafeArea(
-      child: Column(children: [
-        const Spacer(flex: 2),
-        // Logo
-        Image.asset('assets/logo.png', width: 90, height: 90),
-        const SizedBox(height: 28),
-        const Text('Hola, músico.',
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.w300,
-                color: textW, letterSpacing: -0.5)),
-        const SizedBox(height: 10),
-        const Text('Toca. Aprende. Mejora.',
-            style: TextStyle(fontSize: 14, color: accentDim, letterSpacing: 1.5)),
-        const Spacer(flex: 3),
-        // Botón menú
-        _buildMenuButton(),
-        const SizedBox(height: 32),
+  Widget _buildPage() {
+    switch (_page) {
+      case 0:  return _buildSplash();
+      case 1:  return _buildInicio();
+      case 2:  return _buildPractica();
+      case 3:  return _buildConfig();
+      default: return _buildSplash();
+    }
+  }
+
+  // ── NAV BAR INFERIOR ─────────────────────────────────────
+  Widget _buildNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: bgCard.withOpacity(0.95),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.07))),
+      ),
+      padding: EdgeInsets.only(
+        top: 10,
+        bottom: MediaQuery.of(context).padding.bottom + 10,
+      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+        _navItem(1, Icons.home_rounded,        Icons.home_outlined,        'Inicio'),
+        _navItem(2, Icons.music_note_rounded,  Icons.music_note_outlined,  'Practicar'),
+        _navItem(3, Icons.settings_rounded,    Icons.settings_outlined,    'Ajustes'),
       ]),
     );
+  }
+
+  Widget _navItem(int idx, IconData active, IconData inactive, String label) {
+    final sel = _page == idx;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _goTo(idx),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Icon(sel ? active : inactive,
+              key: ValueKey(sel),
+              color: sel ? cWhite : cDim, size: 24),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(
+            fontSize: 10, letterSpacing: 0.5,
+            color: sel ? cWhite : cDim,
+            fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+          )),
+          const SizedBox(height: 2),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: sel ? 16 : 0, height: 2,
+            decoration: BoxDecoration(
+              color: cGreen,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  // ── SPLASH ───────────────────────────────────────────────
+  Widget _buildSplash() {
+    return Stack(fit: StackFit.expand, children: [
+      // Imagen de fondo
+      Image.asset('assets/fondo.png', fit: BoxFit.cover),
+      // Blur + gradiente oscuro
+      Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withOpacity(0.3),
+              Colors.black.withOpacity(0.55),
+              Colors.black.withOpacity(0.92),
+              Colors.black,
+            ],
+            stops: const [0.0, 0.35, 0.7, 1.0],
+          ),
+        ),
+      ),
+      // Contenido
+      SafeArea(
+        child: Column(children: [
+          const Spacer(flex: 3),
+          // Logo
+          Image.asset('assets/logo.png', width: 72, height: 72),
+          const SizedBox(height: 20),
+          const Text('Hola, músico.',
+            style: TextStyle(
+              fontSize: 36, fontWeight: FontWeight.w200,
+              color: cWhite, letterSpacing: -0.5,
+            )),
+          const SizedBox(height: 8),
+          Text('Toca. Aprende. Mejora.',
+            style: TextStyle(
+              fontSize: 13, color: cWhite.withOpacity(0.5),
+              letterSpacing: 2,
+            )),
+          const Spacer(flex: 4),
+          // Botón entrar
+          GestureDetector(
+            onTap: () => _goTo(1),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 40),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: cWhite,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: const Text('Comenzar',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w600,
+                  color: bg, letterSpacing: 0.5,
+                )),
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => _goTo(3),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text('Configuración',
+                style: TextStyle(fontSize: 13, color: cWhite.withOpacity(0.4))),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ]),
+      ),
+    ]);
   }
 
   // ── INICIO ───────────────────────────────────────────────
   Widget _buildInicio() {
     return SafeArea(
-      child: Column(children: [
-        const Spacer(flex: 2),
-        Image.asset('assets/logo.png', width: 64, height: 64),
-        const SizedBox(height: 20),
-        const Text('Sonaris', style: TextStyle(
-            fontSize: 28, fontWeight: FontWeight.w300, color: textW, letterSpacing: 2)),
-        const SizedBox(height: 6),
-        const Text('Detección de acordes DSP',
-            style: TextStyle(fontSize: 12, color: accentDim, letterSpacing: 1.5)),
-        const Spacer(flex: 1),
-        // Cards de nivel
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(children: [
-            _nivelCard('Básico', '${acordesBasicos.length} acordes', 'basico'),
-            const SizedBox(height: 10),
-            _nivelCard('Intermedio', '${acordesMedios.length} acordes', 'medio'),
-            const SizedBox(height: 10),
-            _nivelCard('Avanzado', '${acordesAvanzados.length} acordes', 'avanzado'),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Row(children: [
+            Image.asset('assets/logo.png', width: 32, height: 32),
+            const SizedBox(width: 10),
+            const Text('Sonaris', style: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w300, color: cWhite, letterSpacing: 1,
+            )),
+            const Spacer(),
+            Container(
+              width: 7, height: 7,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _online ? cGreen : cRed,
+                boxShadow: [BoxShadow(
+                  color: (_online ? cGreen : cRed).withOpacity(0.6),
+                  blurRadius: 6,
+                )],
+              ),
+            ),
           ]),
         ),
-        const Spacer(flex: 2),
-        _buildMenuButton(),
-        const SizedBox(height: 32),
+        const SizedBox(height: 36),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Text('¿Qué quieres\npracticar hoy?',
+            style: TextStyle(
+              fontSize: 30, fontWeight: FontWeight.w200,
+              color: cWhite, height: 1.2,
+            )),
+        ),
+        const SizedBox(height: 28),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            children: [
+              _levelCard('Básico', 'Fundamentos y acordes abiertos',
+                  '${acordesBasicos.length} acordes', 'basico', cGreen),
+              const SizedBox(height: 12),
+              _levelCard('Intermedio', 'Cejillas y acordes con séptima',
+                  '${acordesMedios.length} acordes', 'medio', const Color(0xFFFFD54F)),
+              const SizedBox(height: 12),
+              _levelCard('Avanzado', 'Acordes complejos y variaciones',
+                  '${acordesAvanzados.length} acordes', 'avanzado', cRed),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
       ]),
     );
   }
 
-  Widget _nivelCard(String title, String sub, String nivel) {
+  Widget _levelCard(String title, String sub, String count, String nivel, Color color) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         setState(() { _nivel = nivel; _acorde = null; _result = null; });
-        _goTo(1);
+        _goTo(2);
       },
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: bgCard,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.white.withOpacity(0.06)),
         ),
         child: Row(children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(child: Container(
+              width: 10, height: 10,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+            )),
+          ),
+          const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textW)),
-            const SizedBox(height: 2),
-            Text(sub, style: const TextStyle(fontSize: 12, color: accentDim)),
+            Text(title, style: const TextStyle(
+              fontSize: 17, fontWeight: FontWeight.w500, color: cWhite)),
+            const SizedBox(height: 3),
+            Text(sub, style: const TextStyle(fontSize: 12, color: cMid)),
           ])),
-          const Icon(Icons.arrow_forward_ios_rounded, color: accentDim, size: 14),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(count, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            const Icon(Icons.arrow_forward_ios_rounded, color: cDim, size: 12),
+          ]),
         ]),
       ),
     );
@@ -311,379 +467,358 @@ class _HomeScreenState extends State<HomeScreen>
     final correcto = _result?['es_correcto'] ?? false;
     final notas = _acorde != null ? (_acordes[_acorde!] ?? []) : [];
 
-    return SafeArea(
-      child: Column(children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-          child: Row(children: [
-            GestureDetector(
-              onTap: () => _goTo(0),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: accentDim, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(
-              _nivel == 'basico' ? 'Básico' : _nivel == 'medio' ? 'Intermedio' : 'Avanzado',
-              style: const TextStyle(fontSize: 15, color: textW, fontWeight: FontWeight.w400),
-            )),
-            GestureDetector(
-              onTap: _randomAcorde,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: bgCard2, borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.shuffle_rounded, color: accentDim, size: 13),
-                  SizedBox(width: 5),
-                  Text('Aleatorio', style: TextStyle(fontSize: 11, color: accentDim)),
-                ]),
-              ),
-            ),
-          ]),
+    return Column(children: [
+      // Header con safe area
+      Container(
+        color: bg,
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 12,
+          left: 20, right: 20, bottom: 12,
         ),
+        child: Row(children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _goTo(1),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, color: cMid, size: 18),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(
+            _nivel == 'basico' ? 'Básico'
+              : _nivel == 'medio' ? 'Intermedio' : 'Avanzado',
+            style: const TextStyle(fontSize: 16, color: cWhite, fontWeight: FontWeight.w400),
+          )),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _randomAcorde,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: bgCard2, borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.shuffle_rounded, color: cMid, size: 14),
+                SizedBox(width: 6),
+                Text('Aleatorio', style: TextStyle(fontSize: 12, color: cMid)),
+              ]),
+            ),
+          ),
+        ]),
+      ),
 
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(children: [
-              const SizedBox(height: 20),
-              // Grid acordes
-              Wrap(
-                spacing: 8, runSpacing: 8,
-                children: _acordes.keys.map((a) => GestureDetector(
+      Expanded(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: Column(children: [
+            // Grid acordes — chips grandes con tap area generosa
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: _acordes.keys.map((a) {
+                final sel = _acorde == a;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => _setAcorde(a),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
-                      color: _acorde == a ? textW.withOpacity(0.1) : bgCard,
-                      borderRadius: BorderRadius.circular(10),
+                      color: sel ? cWhite.withOpacity(0.12) : bgCard,
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: _acorde == a ? textW.withOpacity(0.5) : Colors.white.withOpacity(0.06),
+                        color: sel ? cWhite.withOpacity(0.6) : Colors.white.withOpacity(0.07),
+                        width: sel ? 1.5 : 1,
                       ),
                     ),
                     child: Text(a, style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w500,
-                      color: _acorde == a ? textW : accentDim,
+                      fontSize: 14, fontWeight: FontWeight.w600,
+                      color: sel ? cWhite : cMid,
                     )),
                   ),
-                )).toList(),
-              ),
+                );
+              }).toList(),
+            ),
 
-              if (_acorde != null) ...[
-                const SizedBox(height: 28),
-                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (_acorde != null) ...[
+              const SizedBox(height: 28),
+              // Diagrama + info
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: bgCard,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   _buildFretboard(_acorde!),
                   const SizedBox(width: 20),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const SizedBox(height: 4),
                     Text(_acorde!, style: const TextStyle(
-                      fontSize: 52, fontWeight: FontWeight.w200, color: textW, height: 1,
+                      fontSize: 56, fontWeight: FontWeight.w100,
+                      color: cWhite, height: 1,
                     )),
+                    const SizedBox(height: 4),
                     Text(chordNames[_acorde!] ?? '', style: const TextStyle(
-                      fontSize: 12, color: accentDim, letterSpacing: 0.5,
+                      fontSize: 12, color: cMid,
                     )),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
+                    const Text('NOTAS', style: TextStyle(
+                      fontSize: 9, color: cDim, letterSpacing: 2,
+                    )),
+                    const SizedBox(height: 8),
                     Wrap(spacing: 6, runSpacing: 6,
                       children: notas.map((n) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white.withOpacity(0.15)),
+                          border: Border.all(color: Colors.white.withOpacity(0.12)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(n, style: const TextStyle(
-                          fontSize: 12, color: textW, fontWeight: FontWeight.w500,
+                          fontSize: 12, color: cWhite, fontWeight: FontWeight.w500,
                         )),
                       )).toList(),
                     ),
                   ])),
                 ]),
-              ],
+              ),
+            ],
 
-              if (_result != null) ...[
-                const SizedBox(height: 24),
-                _buildResultCard(correcto),
-              ],
+            if (_result != null) ...[
+              const SizedBox(height: 16),
+              _buildResultCard(correcto),
+            ],
 
-              const SizedBox(height: 24),
-            ]),
-          ),
+            const SizedBox(height: 100),
+          ]),
         ),
+      ),
 
-        // Sección grabar
-        _buildRecordSection(),
-      ]),
-    );
+      _buildRecordBar(),
+    ]);
   }
 
   // ── CONFIG ───────────────────────────────────────────────
   Widget _buildConfig() {
     return SafeArea(
-      child: Column(children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
           child: Row(children: [
             GestureDetector(
-              onTap: () => _goTo(0),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: accentDim, size: 18),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _goTo(1),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, color: cMid, size: 18),
+              ),
             ),
-            const SizedBox(width: 12),
-            const Text('Configuración', style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w300, color: textW, letterSpacing: 0.5,
+            const SizedBox(width: 8),
+            const Text('Ajustes', style: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w300, color: cWhite,
             )),
           ]),
         ),
-        const SizedBox(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(children: [
-            // Card estado API
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: bgCard,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('API', style: TextStyle(
-                  fontSize: 10, color: accentDim, letterSpacing: 2,
-                )),
-                const SizedBox(height: 14),
-                Row(children: [
-                  // Indicador
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    width: 8, height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _checking ? Colors.amber
-                           : _online   ? accentG
-                           :             Colors.red.shade400,
-                      boxShadow: [BoxShadow(
-                        color: (_checking ? Colors.amber
-                              : _online   ? accentG
-                              :             Colors.red.shade400).withOpacity(0.5),
-                        blurRadius: 8,
-                      )],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(
-                      _checking ? 'Verificando...'
-                          : _online ? 'Conectada'
-                          : 'Sin conexión',
-                      style: TextStyle(
-                        fontSize: 15, color: textW, fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text('sonarisapi.onrender.com',
-                        style: TextStyle(fontSize: 11, color: accentDim)),
-                  ])),
-                  // Botón reconectar
-                  GestureDetector(
-                    onTap: _checking ? null : _checkServer,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        const SizedBox(height: 28),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              // ── Sección API ──
+              _sectionLabel('CONEXIÓN'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: bgCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
+                child: Column(children: [
+                  Row(children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      width: 8, height: 8,
                       decoration: BoxDecoration(
-                        color: bgCard2,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        shape: BoxShape.circle,
+                        color: _checking ? Colors.amber
+                            : _online ? cGreen : cRed,
+                        boxShadow: [BoxShadow(
+                          color: (_checking ? Colors.amber
+                              : _online ? cGreen : cRed).withOpacity(0.5),
+                          blurRadius: 8,
+                        )],
                       ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        if (_checking)
-                          const SizedBox(width: 12, height: 12,
-                            child: CircularProgressIndicator(strokeWidth: 1.5, color: accentDim))
-                        else
-                          const Icon(Icons.refresh_rounded, color: accentDim, size: 14),
-                        const SizedBox(width: 6),
-                        Text(_checking ? 'Verificando' : 'Reconectar',
-                            style: const TextStyle(fontSize: 11, color: accentDim)),
-                      ]),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(
+                        _checking ? 'Verificando...' : _online ? 'API conectada' : 'Sin conexión',
+                        style: const TextStyle(fontSize: 14, color: cWhite, fontWeight: FontWeight.w400),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text('sonarisapi.onrender.com',
+                          style: TextStyle(fontSize: 11, color: cDim)),
+                    ])),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _checking ? null : _checkServer,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: bgCard2,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: _checking
+                          ? const SizedBox(width: 14, height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 1.5, color: cMid))
+                          : const Row(mainAxisSize: MainAxisSize.min, children: [
+                              Icon(Icons.refresh_rounded, color: cMid, size: 14),
+                              SizedBox(width: 5),
+                              Text('Reconectar', style: TextStyle(fontSize: 11, color: cMid)),
+                            ]),
+                      ),
+                    ),
+                  ]),
+                  if (!_online && !_checking) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: cRed.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: cRed.withOpacity(0.15)),
+                      ),
+                      child: const Text(
+                        'Sin conexión. Render free tier puede tardar ~30s en despertar. Toca Reconectar.',
+                        style: TextStyle(fontSize: 11, color: Color(0xFFFF8080), height: 1.5),
+                      ),
+                    ),
+                  ],
                 ]),
-                if (!_online && !_checking) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.red.withOpacity(0.15)),
-                    ),
-                    child: const Text(
-                      'La API no responde. Verifica tu conexión a internet o espera a que el servidor despierte (Render free tier puede tardar ~30s).',
-                      style: TextStyle(fontSize: 11, color: Color(0xFFFF8080), height: 1.5),
-                    ),
-                  ),
-                ],
-              ]),
-            ),
-            const SizedBox(height: 12),
-            // Info versión
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: bgCard,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
               ),
-              child: Row(children: [
-                Image.asset('assets/logo.png', width: 28, height: 28),
-                const SizedBox(width: 12),
-                const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Sonaris', style: TextStyle(fontSize: 14, color: textW, fontWeight: FontWeight.w400)),
-                  Text('v1.0.0 · DSP sin ML', style: TextStyle(fontSize: 11, color: accentDim)),
-                ])),
-              ]),
-            ),
-          ]),
+
+              const SizedBox(height: 20),
+
+              // ── Sección Micrófono ──
+              _sectionLabel('MICRÓFONO'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: bgCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
+                child: Column(children: [
+                  Row(children: [
+                    Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: bgCard2, borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.mic_rounded, color: cMid, size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('Prueba de micrófono',
+                          style: TextStyle(fontSize: 14, color: cWhite, fontWeight: FontWeight.w400)),
+                      const SizedBox(height: 2),
+                      Text(
+                        _micTesting ? 'Grabando 2 segundos...'
+                          : _micOk == true  ? 'Micrófono funcionando ✓'
+                          : _micOk == false ? 'Sin permiso de micrófono'
+                          : 'Verifica que el micrófono funcione',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _micOk == true ? cGreen
+                              : _micOk == false ? cRed : cDim,
+                        ),
+                      ),
+                    ])),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _micTesting ? null : _testMic,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: bgCard2, borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: _micTesting
+                          ? const SizedBox(width: 14, height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 1.5, color: cMid))
+                          : const Text('Probar', style: TextStyle(fontSize: 11, color: cMid)),
+                      ),
+                    ),
+                  ]),
+                  if (_micOk == false) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: cRed.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: cRed.withOpacity(0.15)),
+                      ),
+                      child: const Text(
+                        'Ve a Ajustes → Privacidad → Micrófono → Sonaris y activa el permiso.',
+                        style: TextStyle(fontSize: 11, color: Color(0xFFFF8080), height: 1.5),
+                      ),
+                    ),
+                  ],
+                ]),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Info ──
+              _sectionLabel('ACERCA DE'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: bgCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                ),
+                child: Row(children: [
+                  Image.asset('assets/logo.png', width: 36, height: 36),
+                  const SizedBox(width: 14),
+                  const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Sonaris', style: TextStyle(fontSize: 15, color: cWhite, fontWeight: FontWeight.w400)),
+                    SizedBox(height: 2),
+                    Text('v1.0.0 · Detección DSP sin ML',
+                        style: TextStyle(fontSize: 11, color: cDim)),
+                  ]),
+                ]),
+              ),
+              const SizedBox(height: 100),
+            ],
+          ),
         ),
-        const Spacer(),
-        _buildMenuButton(),
-        const SizedBox(height: 32),
       ]),
     );
   }
 
-  // ── MENÚ DESLIZABLE ──────────────────────────────────────
-  Widget _buildMenu() {
-    final items = [
-      (Icons.home_outlined,       'Inicio',        0),
-      (Icons.music_note_outlined, 'Practicar',     1),
-      (Icons.settings_outlined,   'Configuración', 2),
-    ];
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: 8,
-        bottom: MediaQuery.of(context).padding.bottom + 16,
-      ),
-      decoration: BoxDecoration(
-        color: bgCard,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.07))),
-      ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        // Handle
-        Container(
-          width: 36, height: 3,
-          margin: const EdgeInsets.only(bottom: 20, top: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        ...items.map((item) => GestureDetector(
-          onTap: () => _goTo(item.$3),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            child: Row(children: [
-              Icon(item.$1,
-                color: _page == item.$3 ? textW : accentDim,
-                size: 20),
-              const SizedBox(width: 16),
-              Text(item.$2, style: TextStyle(
-                fontSize: 16,
-                color: _page == item.$3 ? textW : accentDim,
-                fontWeight: _page == item.$3 ? FontWeight.w500 : FontWeight.w300,
-              )),
-              if (_page == item.$3) ...[
-                const Spacer(),
-                Container(width: 5, height: 5,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: accentG)),
-              ],
-            ]),
-          ),
-        )),
-      ]),
-    );
-  }
-
-  // ── BOTÓN MENÚ (hamburguesa) ─────────────────────────────
-  Widget _buildMenuButton() {
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      GestureDetector(
-        onTap: _toggleMenu,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 52, height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: bgCard2,
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: Icon(
-            _menuOpen ? Icons.close_rounded : Icons.menu_rounded,
-            color: textW, size: 22,
-          ),
-        ),
-      ),
-      const SizedBox(height: 6),
-      const Text('MENÚ', style: TextStyle(
-        fontSize: 9, color: accentDim, letterSpacing: 2,
-      )),
-    ]);
-  }
-
-  // ── FRETBOARD ────────────────────────────────────────────
-  Widget _buildFretboard(String acorde) {
-    final dots = chordFrets[acorde] ?? [];
-    const strings = 6;
-    const frets   = 4;
-    const cellW   = 26.0;
-    const cellH   = 20.0;
-    const dotR    = 8.0;
-
-    return Container(
-      width: cellW * strings + 16,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bgCard2,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
-      ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Container(height: 3, margin: const EdgeInsets.only(bottom: 2),
-          decoration: BoxDecoration(
-            color: textW.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(2),
-          )),
-        SizedBox(
-          width: cellW * strings,
-          height: cellH * frets,
-          child: CustomPaint(painter: _FretboardPainter(
-            dots: dots, strings: strings, frets: frets,
-            cellW: cellW, cellH: cellH, dotR: dotR,
-          )),
-        ),
-      ]),
-    );
-  }
+  Widget _sectionLabel(String label) => Text(label,
+    style: const TextStyle(fontSize: 10, color: cDim, letterSpacing: 2, fontWeight: FontWeight.w500));
 
   // ── RESULTADO ────────────────────────────────────────────
   Widget _buildResultCard(bool correcto) {
     final confianza = (_result!['confianza'] ?? 0).toStringAsFixed(0);
     final faltantes = List<String>.from(_result!['notas_faltantes'] ?? []);
+    final detectadas = List<String>.from(_result!['notas_detectadas'] ?? []);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: bgCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: correcto ? accentG.withOpacity(0.3) : Colors.red.withOpacity(0.2),
+          color: correcto ? cGreen.withOpacity(0.3) : cRed.withOpacity(0.2),
         ),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -691,34 +826,41 @@ class _HomeScreenState extends State<HomeScreen>
           Container(width: 6, height: 6,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: correcto ? accentG : Colors.red.shade400,
+              color: correcto ? cGreen : cRed,
+              boxShadow: [BoxShadow(
+                color: (correcto ? cGreen : cRed).withOpacity(0.5),
+                blurRadius: 6,
+              )],
             )),
-          const SizedBox(width: 8),
-          Text(
-            correcto ? 'Correcto' : 'Intenta de nuevo',
+          const SizedBox(width: 10),
+          Text(correcto ? 'Correcto' : 'Intenta de nuevo',
             style: TextStyle(
               fontSize: 15, fontWeight: FontWeight.w500,
-              color: correcto ? accentG : Colors.red.shade300,
-            ),
-          ),
+              color: correcto ? cGreen : cRed,
+            )),
           const Spacer(),
-          Text('$confianza%', style: const TextStyle(fontSize: 12, color: accentDim)),
+          Text('$confianza%', style: const TextStyle(fontSize: 12, color: cDim)),
         ]),
+        if (correcto && detectadas.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Text('Detectadas: ${detectadas.take(4).join(', ')}',
+              style: const TextStyle(fontSize: 12, color: cMid)),
+        ],
         if (!correcto && faltantes.isNotEmpty) ...[
           const SizedBox(height: 10),
           Text('Notas faltantes: ${faltantes.join(', ')}',
-              style: const TextStyle(fontSize: 12, color: accentDim)),
+              style: const TextStyle(fontSize: 12, color: cMid)),
         ],
       ]),
     );
   }
 
-  // ── SECCIÓN GRABAR ───────────────────────────────────────
-  Widget _buildRecordSection() {
+  // ── BARRA GRABAR ─────────────────────────────────────────
+  Widget _buildRecordBar() {
     return Container(
       padding: EdgeInsets.only(
-        left: 24, right: 24, top: 16,
-        bottom: MediaQuery.of(context).padding.bottom + 20,
+        left: 20, right: 20, top: 14,
+        bottom: MediaQuery.of(context).padding.bottom + 80,
       ),
       decoration: BoxDecoration(
         color: bg,
@@ -729,25 +871,25 @@ class _HomeScreenState extends State<HomeScreen>
         ScaleTransition(
           scale: _recording ? _pulseAnim : const AlwaysStoppedAnimation(1.0),
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: _processing ? null : (_recording ? _stopRec : _startRec),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 56, height: 56,
+              width: 58, height: 58,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _recording ? Colors.red.withOpacity(0.15) : bgCard2,
+                color: _recording ? cRed.withOpacity(0.15) : bgCard2,
                 border: Border.all(
-                  color: _recording ? Colors.red.shade400 : Colors.white.withOpacity(0.1),
+                  color: _recording ? cRed : Colors.white.withOpacity(0.12),
                   width: 1.5,
                 ),
               ),
               child: _processing
                 ? const Padding(padding: EdgeInsets.all(16),
-                    child: CircularProgressIndicator(strokeWidth: 1.5, color: accentDim))
+                    child: CircularProgressIndicator(strokeWidth: 1.5, color: cMid))
                 : Icon(
                     _recording ? Icons.stop_rounded : Icons.mic_rounded,
-                    color: _recording ? Colors.red.shade300 : accentDim,
-                    size: 24,
+                    color: _recording ? cRed : cMid, size: 26,
                   ),
             ),
           ),
@@ -761,10 +903,9 @@ class _HomeScreenState extends State<HomeScreen>
               : 'Selecciona un acorde',
             style: TextStyle(
               fontSize: _recording ? 11 : 14,
-              color: _recording ? accentG : textW,
-              letterSpacing: _recording ? 2 : 0,
-              fontWeight: FontWeight.w300,
-              height: 1.4,
+              color: _recording ? cGreen : cWhite,
+              letterSpacing: _recording ? 2.5 : 0,
+              fontWeight: FontWeight.w300, height: 1.4,
             ),
           ),
           if (_recording) ...[
@@ -775,7 +916,7 @@ class _HomeScreenState extends State<HomeScreen>
                 value: _progress / 30,
                 minHeight: 2,
                 backgroundColor: Colors.white.withOpacity(0.06),
-                valueColor: const AlwaysStoppedAnimation(accentG),
+                valueColor: const AlwaysStoppedAnimation(cGreen),
               ),
             ),
           ],
@@ -783,50 +924,66 @@ class _HomeScreenState extends State<HomeScreen>
       ]),
     );
   }
+
+  // ── FRETBOARD ────────────────────────────────────────────
+  Widget _buildFretboard(String acorde) {
+    final dots = chordFrets[acorde] ?? [];
+    const s = 6; const f = 4;
+    const cW = 26.0; const cH = 22.0; const dR = 8.0;
+    return Container(
+      width: cW * s + 16,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: bgCard2, borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.07)),
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(height: 3, margin: const EdgeInsets.only(bottom: 2),
+          decoration: BoxDecoration(
+            color: cWhite.withOpacity(0.4), borderRadius: BorderRadius.circular(2))),
+        SizedBox(
+          width: cW * s, height: cH * f,
+          child: CustomPaint(painter: _FretPainter(
+            dots: dots, strings: s, frets: f, cW: cW, cH: cH, dR: dR)),
+        ),
+      ]),
+    );
+  }
 }
 
 // ── FRETBOARD PAINTER ────────────────────────────────────
-class _FretboardPainter extends CustomPainter {
+class _FretPainter extends CustomPainter {
   final List<List<int>> dots;
   final int strings, frets;
-  final double cellW, cellH, dotR;
-
-  const _FretboardPainter({
-    required this.dots, required this.strings, required this.frets,
-    required this.cellW, required this.cellH, required this.dotR,
-  });
+  final double cW, cH, dR;
+  const _FretPainter({required this.dots, required this.strings,
+    required this.frets, required this.cW, required this.cH, required this.dR});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final line = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..strokeWidth = 0.8;
-
+    final line = Paint()..color = Colors.white.withOpacity(0.1)..strokeWidth = 0.8;
     for (int s = 0; s < strings; s++) {
-      final x = s * cellW + cellW / 2;
+      final x = s * cW + cW / 2;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), line);
     }
     for (int f = 0; f <= frets; f++) {
-      final y = f * cellH;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), line);
+      canvas.drawLine(Offset(0, f * cH), Offset(size.width, f * cH), line);
     }
-
-    final dot = Paint()..color = textW;
+    final dot  = Paint()..color = const Color(0xFFF0F0F0);
     final glow = Paint()
-      ..color = textW.withOpacity(0.15)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-
+      ..color = Colors.white.withOpacity(0.12)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     for (final d in dots) {
       if (d.length < 2) continue;
       final s = d[0]; final f = d[1];
       if (s < 0 || s >= strings || f < 1 || f > frets) continue;
-      final x = s * cellW + cellW / 2;
-      final y = (f - 1) * cellH + cellH / 2;
-      canvas.drawCircle(Offset(x, y), dotR + 4, glow);
-      canvas.drawCircle(Offset(x, y), dotR, dot);
+      final x = s * cW + cW / 2;
+      final y = (f - 1) * cH + cH / 2;
+      canvas.drawCircle(Offset(x, y), dR + 5, glow);
+      canvas.drawCircle(Offset(x, y), dR, dot);
     }
   }
 
   @override
-  bool shouldRepaint(_FretboardPainter old) => old.dots != dots;
+  bool shouldRepaint(_FretPainter o) => o.dots != dots;
 }
