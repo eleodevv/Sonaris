@@ -27,10 +27,10 @@ class ApiService {
     if (acordeEsperado != null) {
       request.fields['acorde_esperado'] = acordeEsperado;
     }
-    // Timeout de 10s para evitar que la app se quede colgada
-    var streamed = await request.send().timeout(const Duration(seconds: 10));
+    # Timeout generoso para compensar latencia de DevTunnels + procesamiento
+    var streamed = await request.send().timeout(const Duration(seconds: 25));
     var response = await http.Response.fromStream(streamed)
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 25));
     if (response.statusCode == 200) return json.decode(response.body);
     throw Exception('Error al detectar acorde (${response.statusCode})');
   }
