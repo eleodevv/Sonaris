@@ -88,6 +88,8 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
   void _seleccionarAcorde(String a) {
     setState(() { _acorde = a; _resultado = null; });
     _irA(2);
+    // Precalentar la API en segundo plano para que esté lista cuando el usuario grabe
+    context.read<ApiService>().checkHealth();
   }
 
   // ── Conexión ──────────────────────────────────────────────
@@ -153,7 +155,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
       });
       HapticFeedback.heavyImpact();
     } on TimeoutException {
-      _mostrarMensaje('Tiempo de espera agotado.');
+      _mostrarMensaje('El servidor tardó mucho. Intenta de nuevo en unos segundos.');
     } catch (e) {
       _mostrarMensaje(e.toString().contains('SocketException')
           ? 'Sin conexión a la API.'

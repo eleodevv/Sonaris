@@ -9,9 +9,9 @@ class ApiService {
     var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/clasificar'));
     request.files.add(await http.MultipartFile.fromPath('audio', audioPath,
         filename: 'audio.wav'));
-    var streamed = await request.send().timeout(const Duration(seconds: 30));
+    var streamed = await request.send().timeout(const Duration(seconds: 90));
     var response = await http.Response.fromStream(streamed)
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 90));
     if (response.statusCode == 200) return json.decode(response.body);
     throw Exception('Error ${response.statusCode}');
   }
@@ -22,9 +22,9 @@ class ApiService {
     request.files.add(await http.MultipartFile.fromPath('audio', audioPath,
         filename: '$acordeEsperado.wav'));
     request.fields['acorde_esperado'] = acordeEsperado;
-    var streamed = await request.send().timeout(const Duration(seconds: 25));
+    var streamed = await request.send().timeout(const Duration(seconds: 90));
     var response = await http.Response.fromStream(streamed)
-        .timeout(const Duration(seconds: 25));
+        .timeout(const Duration(seconds: 90));
     if (response.statusCode == 200) return json.decode(response.body);
     throw Exception('Error ${response.statusCode}');
   }
