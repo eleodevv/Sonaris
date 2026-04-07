@@ -15,7 +15,8 @@ dependencies:
   path_provider: ^2.1.1
   provider: ^6.1.1
   audioplayers: ^5.2.1
-  flutter_guitar_chord: ^0.0.3
+  flutter_guitar_chord: ^0.0.2
+  guitar_chord_library: ^0.0.1
 
 dev_dependencies:
   flutter_test:

@@ -1,27 +1,20 @@
-/// Datos de los 30 acordes organizados por nivel
+/// Datos de acordes organizados por nivel
 
-// ── Listas por nivel ──────────────────────────────────────────────────────────
-
+// ── Listas por nivel ──────────────────────────────────────
 const List<String> acordesBasicos = [
   'A', 'Am', 'C', 'D', 'Dm', 'E', 'Em', 'F', 'G', 'G7',
 ];
-
 const List<String> acordesIntermedios = [
   'A7', 'Asus4', 'Bm', 'Cadd9', 'Cmaj7', 'D7', 'Dsus4', 'E7', 'Fmaj7',
 ];
-
 const List<String> acordesAvanzados = [
   'Am7', 'Amaj7', 'Bbmaj7', 'Bm7', 'Dm7', 'Em7', 'F7', 'Fm', 'F#m', 'Gm', 'Gsus4',
 ];
 
-const List<String> acordes = [
-  ...acordesBasicos,
-  ...acordesIntermedios,
-  ...acordesAvanzados,
-];
+/// Lista completa (compatibilidad con código existente)
+const List<String> acordes = [...acordesBasicos, ...acordesIntermedios, ...acordesAvanzados];
 
-// ── Nombres ───────────────────────────────────────────────────────────────────
-
+// ── Nombres legibles ──────────────────────────────────────
 const Map<String, String> nombreAcorde = {
   'A':     'LA Mayor',     'Am':    'LA Menor',      'C':     'DO Mayor',
   'D':     'RE Mayor',     'Dm':    'RE Menor',       'E':     'MI Mayor',
@@ -35,8 +28,7 @@ const Map<String, String> nombreAcorde = {
   'F#m':   'FA# Menor',    'Gm':    'SOL Menor',      'Gsus4': 'SOL Sus4',
 };
 
-// ── Notas ─────────────────────────────────────────────────────────────────────
-
+// ── Notas de cada acorde ──────────────────────────────────
 const Map<String, List<String>> notasAcorde = {
   'A':     ['A', 'C#', 'E'],
   'Am':    ['A', 'C', 'E'],
@@ -70,51 +62,149 @@ const Map<String, List<String>> notasAcorde = {
   'Gsus4': ['G', 'C', 'D'],
 };
 
-// ── Datos para flutter_guitar_chord ──────────────────────────────────────────
-// fingers: '0 1 2 3 4 5' por cuerda (E A D G B e), 0=al aire, -1=silencio
-// frets:   traste por cuerda, -1=silencio, 0=al aire
-
+// ── Datos para flutter_guitar_chord ──────────────────────
+// fingers: posición de cada cuerda (6→1), 0=al aire, -1=silencio
+// frets:   traste de cada cuerda, -1=silencio, 0=al aire
 class ChordData {
-  final String fingers;
-  final String frets;
+  final String fingers; // ej: '0 1 2 2 0 0'
+  final String frets;   // ej: '0 1 2 2 0 0'
   final int baseFret;
-  const ChordData({required this.fingers, required this.frets, this.baseFret = 1});
+  const ChordData(this.fingers, this.frets, this.baseFret);
 }
 
 const Map<String, ChordData> chordData = {
-  'A':     ChordData(fingers: '-1 0 1 2 2 2', frets: '-1 0 2 2 2 0'),
-  'Am':    ChordData(fingers: '-1 0 1 2 3 0', frets: '-1 0 2 2 1 0'),
-  'C':     ChordData(fingers: '-1 3 2 0 1 0', frets: '-1 3 2 0 1 0'),
-  'D':     ChordData(fingers: '-1 -1 0 1 3 2', frets: '-1 -1 0 2 3 2'),
-  'Dm':    ChordData(fingers: '-1 -1 0 2 3 1', frets: '-1 -1 0 2 3 1'),
-  'E':     ChordData(fingers: '0 2 3 1 0 0',  frets: '0 2 2 1 0 0'),
-  'Em':    ChordData(fingers: '0 2 3 0 0 0',  frets: '0 2 2 0 0 0'),
-  'F':     ChordData(fingers: '1 1 2 3 4 1',  frets: '1 1 2 3 3 1'),
-  'G':     ChordData(fingers: '2 1 0 0 3 4',  frets: '3 2 0 0 0 3'),
-  'G7':    ChordData(fingers: '1 0 0 0 2 1',  frets: '3 2 0 0 0 1'),
-  'A7':    ChordData(fingers: '-1 0 2 0 2 0', frets: '-1 0 2 0 2 0'),
-  'Asus4': ChordData(fingers: '-1 0 2 2 3 0', frets: '-1 0 2 2 0 0'),
-  'Bm':    ChordData(fingers: '-1 1 2 3 4 1', frets: '-1 2 4 4 3 2', baseFret: 2),
-  'Cadd9': ChordData(fingers: '-1 3 2 0 3 0', frets: '-1 3 2 0 3 0'),
-  'Cmaj7': ChordData(fingers: '-1 3 2 0 0 0', frets: '-1 3 2 0 0 0'),
-  'D7':    ChordData(fingers: '-1 -1 0 2 1 2', frets: '-1 -1 0 2 1 2'),
-  'Dsus4': ChordData(fingers: '-1 -1 0 2 3 3', frets: '-1 -1 0 2 3 3'),
-  'E7':    ChordData(fingers: '0 2 0 1 0 0',  frets: '0 2 0 1 0 0'),
-  'Fmaj7': ChordData(fingers: '-1 -1 3 2 1 0', frets: '-1 -1 3 2 1 0'),
-  'Am7':   ChordData(fingers: '-1 0 2 0 1 0', frets: '-1 0 2 0 1 0'),
-  'Amaj7': ChordData(fingers: '-1 0 1 1 1 0', frets: '-1 0 2 1 2 0'),
-  'Bbmaj7':ChordData(fingers: '1 1 2 3 4 1',  frets: '1 1 2 3 3 1', baseFret: 1),
-  'Bm7':   ChordData(fingers: '-1 1 2 1 3 1', frets: '-1 2 4 2 3 2', baseFret: 2),
-  'Dm7':   ChordData(fingers: '-1 -1 0 2 1 1', frets: '-1 -1 0 2 1 1'),
-  'Em7':   ChordData(fingers: '0 2 0 0 0 0',  frets: '0 2 2 0 0 0'),
-  'F7':    ChordData(fingers: '1 1 2 1 4 1',  frets: '1 1 2 1 3 1'),
-  'Fm':    ChordData(fingers: '1 1 3 3 4 1',  frets: '1 1 3 3 4 1'),
-  'F#m':   ChordData(fingers: '1 1 3 3 4 1',  frets: '2 2 4 4 5 2', baseFret: 2),
-  'Gm':    ChordData(fingers: '1 1 3 3 4 1',  frets: '3 5 5 3 3 3', baseFret: 3),
-  'Gsus4': ChordData(fingers: '1 0 0 0 1 1',  frets: '3 3 0 0 1 3'),
+  // Básicos
+  'A':     ChordData('0 1 2 3 0 0',  '-1 0 2 2 2 0',  1),
+  'Am':    ChordData('0 1 2 3 0 0',  '-1 0 2 2 1 0',  1),
+  'C':     ChordData('0 3 2 0 1 0',  '-1 3 2 0 1 0',  1),
+  'D':     ChordData('0 0 0 1 3 2',  '-1 -1 0 2 3 2', 1),
+  'Dm':    ChordData('0 0 0 1 3 2',  '-1 -1 0 2 3 1', 1),
+  'E':     ChordData('0 2 3 1 0 0',  '0 2 2 1 0 0',   1),
+  'Em':    ChordData('0 2 3 0 0 0',  '0 2 2 0 0 0',   1),
+  'F':     ChordData('1 1 2 3 4 1',  '1 1 2 3 3 1',   1),
+  'G':     ChordData('2 1 0 0 0 3',  '3 2 0 0 0 3',   1),
+  'G7':    ChordData('2 1 0 0 0 3',  '3 2 0 0 0 1',   1),
+  // Intermedios
+  'A7':    ChordData('0 1 0 2 0 0',  '-1 0 2 0 2 0',  1),
+  'Asus4': ChordData('0 1 2 2 0 0',  '-1 0 2 2 0 0',  1),
+  'Bm':    ChordData('1 1 2 3 4 1',  '-1 2 4 4 3 2',  2),
+  'Cadd9': ChordData('0 3 2 0 0 3',  '-1 3 2 0 3 3',  1),
+  'Cmaj7': ChordData('0 3 2 0 0 0',  '-1 3 2 0 0 0',  1),
+  'D7':    ChordData('0 0 0 2 1 2',  '-1 -1 0 2 1 2', 1),
+  'Dsus4': ChordData('0 0 0 1 3 3',  '-1 -1 0 2 3 3', 1),
+  'E7':    ChordData('0 2 0 1 0 0',  '0 2 2 1 3 0',   1),
+  'Fmaj7': ChordData('0 1 2 3 0 0',  '-1 -1 3 2 1 0', 1),
+  // Avanzados
+  'Am7':   ChordData('0 1 0 2 0 0',  '-1 0 2 0 1 0',  1),
+  'Amaj7': ChordData('0 1 2 3 0 0',  '-1 0 2 1 2 0',  1),
+  'Bbmaj7':ChordData('1 1 2 3 4 1',  '1 1 3 2 3 1',   1),
+  'Bm7':   ChordData('1 1 2 0 3 1',  '-1 2 4 2 3 2',  2),
+  'Dm7':   ChordData('0 0 0 2 1 1',  '-1 -1 0 2 1 1', 1),
+  'Em7':   ChordData('0 2 0 0 0 0',  '0 2 2 0 3 0',   1),
+  'F7':    ChordData('1 1 2 3 1 1',  '1 1 2 3 1 1',   1),
+  'Fm':    ChordData('1 1 2 3 4 1',  '1 1 3 3 2 1',   1),
+  'F#m':   ChordData('1 1 2 3 4 1',  '2 2 4 4 3 2',   2),
+  'Gm':    ChordData('1 1 2 3 4 1',  '3 3 5 5 4 3',   3),
+  'Gsus4': ChordData('2 1 0 0 1 3',  '3 3 0 0 1 3',   1),
 };
 
-// ── Samples de audio ──────────────────────────────────────────────────────────
+// ── Datos legacy (compatibilidad con DiagramaAcordeWidget) ─
+class Punto {
+  final int cuerda;
+  final int traste;
+  final int dedo;
+  const Punto(this.cuerda, this.traste, this.dedo);
+}
+
+class DiagramaAcorde {
+  final int trasteInicio;
+  final List<Punto> puntos;
+  final List<int> cuerdaAlAire;
+  final List<int> cuerdaSilencio;
+  final bool tieneCejilla;
+  final int trastesCejilla;
+  final int cejillaDesde;
+  final int cejillaHasta;
+
+  const DiagramaAcorde({
+    this.trasteInicio = 1,
+    required this.puntos,
+    this.cuerdaAlAire   = const [],
+    this.cuerdaSilencio = const [],
+    this.tieneCejilla   = false,
+    this.trastesCejilla = 0,
+    this.cejillaDesde   = 0,
+    this.cejillaHasta   = 5,
+  });
+}
+
+const Map<String, DiagramaAcorde> diagramas = {
+  'A': DiagramaAcorde(
+    trasteInicio: 1,
+    puntos: [Punto(2, 2, 1), Punto(3, 2, 2), Punto(4, 2, 3)],
+    cuerdaAlAire: [1, 5], cuerdaSilencio: [0],
+  ),
+  'Am': DiagramaAcorde(
+    trasteInicio: 1,
+    puntos: [Punto(2, 2, 2), Punto(3, 2, 3), Punto(4, 1, 1)],
+    cuerdaAlAire: [1, 5], cuerdaSilencio: [0],
+  ),
+  'C': DiagramaAcorde(
+    trasteInicio: 1,
+    puntos: [Punto(1, 3, 3), Punto(2, 2, 2), Punto(4, 1, 1)],
+    cuerdaAlAire: [3, 5], cuerdaSilencio: [0],
+  ),
+  'D': DiagramaAcorde(
+    trasteInicio: 1,
+    puntos: [Punto(3, 2, 1), Punto(4, 3, 3), Punto(5, 2, 2)],
+    cuerdaAlAire: [2], cuerdaSilencio: [0, 1],
+  ),
+  'F': DiagramaAcorde(
+    trasteInicio: 1,
+    puntos: [Punto(1, 3, 3), Punto(2, 3, 4), Punto(3, 2, 2)],
+    tieneCejilla: true, trastesCejilla: 1, cejillaDesde: 0, cejillaHasta: 5,
+  ),
+  'Bm7': DiagramaAcorde(
+    trasteInicio: 2,
+    puntos: [Punto(1, 3, 3), Punto(3, 1, 2)],
+    cuerdaSilencio: [0],
+    tieneCejilla: true, trastesCejilla: 1, cejillaDesde: 1, cejillaHasta: 5,
+  ),
+};
+
+// ── Descripciones ─────────────────────────────────────────
+const Map<String, String> descripcionAcorde = {
+  'A':     'Tres dedos en el segundo traste, cuerdas D-G-B. Acorde abierto fácil.',
+  'Am':    'Similar a A pero el índice va en el primer traste de la cuerda B.',
+  'C':     'Forma diagonal: dedo 3 en A traste 3, dedo 2 en D traste 2, dedo 1 en B traste 1.',
+  'D':     'Solo se tocan 4 cuerdas (D-G-B-e). Forma de triángulo en trastes 2-3.',
+  'Dm':    'Similar a D pero con la cuerda B en traste 1. Sonido más oscuro.',
+  'E':     'Acorde abierto clásico. Tres dedos en trastes 1 y 2.',
+  'Em':    'El más fácil. Solo dos dedos en cuerdas A y D traste 2.',
+  'F':     'Cejilla completa en traste 1. El reto clásico del principiante.',
+  'G':     'Acorde abierto con dedos en trastes 2 y 3.',
+  'G7':    'Como G pero con el meñique en la cuerda e traste 1.',
+  'A7':    'A con el dedo del G levantado. Sonido bluesy.',
+  'Asus4': 'A sin el dedo de la cuerda B. Sonido suspendido.',
+  'Bm':    'Cejilla en traste 2. Primer barré importante.',
+  'Cadd9': 'C con el dedo meñique en la cuerda e traste 3.',
+  'Cmaj7': 'C sin el dedo de la cuerda B. Sonido suave y jazzístico.',
+  'D7':    'D con el dedo índice en la cuerda B traste 1.',
+  'Dsus4': 'D con el dedo meñique en la cuerda e traste 3.',
+  'E7':    'E con el dedo del G levantado.',
+  'Fmaj7': 'F sin la cuerda E grave. Sonido más abierto.',
+  'Am7':   'Am con el dedo del G levantado. Muy usado en pop.',
+  'Amaj7': 'A con el índice en la cuerda G traste 1.',
+  'Bbmaj7':'Cejilla en traste 1 con forma de Amaj7.',
+  'Bm7':   'Cejilla en traste 2 con dos dedos adicionales.',
+  'Dm7':   'Dm con el meñique en la cuerda e traste 1.',
+  'Em7':   'Em con el dedo del D levantado.',
+  'F7':    'F con el meñique en la cuerda G traste 3.',
+  'Fm':    'Cejilla en traste 1 con forma de Em.',
+  'F#m':   'Cejilla en traste 2 con forma de Em. Barré real.',
+  'Gm':    'Cejilla en traste 3 con forma de Em.',
+  'Gsus4': 'G con el índice en la cuerda B traste 1.',
+};
 
 const Map<String, String> sampleAcorde = {
   'A':   'A-07-LAZARUS.wav',

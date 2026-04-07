@@ -11,6 +11,7 @@ import 'splash.dart';
 import 'lista_acordes.dart';
 import 'practica.dart';
 import 'api_monitor.dart';
+import 'catalogo_acordes.dart';
 
 /// Pantalla raíz que maneja la navegación y el estado global
 class PantallaHome extends StatefulWidget {
@@ -77,7 +78,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
   // ── Navegación ────────────────────────────────────────────
   void _irA(int pagina) {
     HapticFeedback.lightImpact();
-    if (pagina == 3) { _iniciarMonitorPing(); }
+    if (pagina == 4) { _iniciarMonitorPing(); }
     else { _timerPing?.cancel(); }
     setState(() { _pagina = pagina; _resultado = null; });
     _paginaCtrl.reset();
@@ -202,7 +203,8 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
         alVerificarConexion: _verificarServidor,
       );
       case 2: return _construirPractica();
-      case 3: return PantallaApiMonitor(
+      case 3: return const PantallaCatalogoAcordes();
+      case 4: return PantallaApiMonitor(
         online: _online,
         verificando: _verificando,
         historialPings: _historialPings,
@@ -368,7 +370,8 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
               ),
             ),
           ),
-          Expanded(child: _itemNav(3, Icons.monitor_heart_rounded, 'API')),
+          Expanded(child: _itemNav(3, Icons.grid_view_rounded, 'Catálogo')),
+          Expanded(child: _itemNav(4, Icons.monitor_heart_rounded, 'API')),
         ]),
       ),
     );
