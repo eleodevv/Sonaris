@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../constantes/colores.dart';
 import '../constantes/acordes.dart';
 import '../widgets/diagrama_acorde.dart';
+import 'pantalla_acordes_todos.dart';
 
 /// Pantalla con la lista de los 6 acordes disponibles
 class PantallaListaAcordes extends StatelessWidget {
@@ -37,6 +38,28 @@ class PantallaListaAcordes extends StatelessWidget {
               ),
             ),
             const Spacer(),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const Scaffold(
+                  backgroundColor: fondo,
+                  body: PantallaAcordesTodos(),
+                ),
+              )),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: tarjeta2,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.grid_view_rounded, color: medio, size: 13),
+                  SizedBox(width: 5),
+                  Text('Ver todos', style: TextStyle(fontSize: 11, color: medio)),
+                ]),
+              ),
+            ),
+            const SizedBox(width: 10),
             _PuntoCon(online: online, verificando: verificando, alTocar: alVerificarConexion),
           ]),
         ),
