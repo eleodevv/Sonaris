@@ -214,7 +214,9 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                         ),
                       ),
                       child: ClipOval(
-                          child: Image.asset(asset, fit: BoxFit.cover)),
+                          child: Image.asset(asset,
+                              fit: BoxFit.cover,
+                              alignment: Alignment.topCenter)),
                     ),
                   );
                 }).toList(),
@@ -449,8 +451,8 @@ class _EstadoAjustes extends State<PantallaAjustes> {
             child: const Text('Cancelar', style: TextStyle(color: medio)),
           ),
           TextButton(
-            onPressed: () {
-              sesion.cerrarSesion();
+            onPressed: () async {
+              await sesion.cerrarSesion();
               Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const PantallaBienvenida()),
@@ -620,6 +622,7 @@ class _AvatarWidget extends StatelessWidget {
           width: 80,
           height: 80,
           fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
         ),
       );
     } else {

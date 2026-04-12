@@ -13,7 +13,8 @@ import 'splash.dart';
 import 'lista_acordes.dart';
 import 'practica.dart';
 import 'api_monitor.dart';
-import 'quiz.dart';
+import 'recursos.dart';
+import '../widgets/asistente_ia.dart';
 
 /// Pantalla raíz que maneja la navegación y el estado global
 class PantallaHome extends StatefulWidget {
@@ -83,11 +84,6 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
   // ── Navegación ────────────────────────────────────────────
   void _irA(int pagina) {
     HapticFeedback.lightImpact();
-    if (pagina == 4) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (_) => const PantallaQuiz()));
-      return;
-    }
     if (pagina == 3) {
       _iniciarMonitorPing();
     } else {
@@ -241,6 +237,13 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
             child:
                 SlideTransition(position: _navSlide, child: _construirNavBar()),
           ),
+        // Botón flotante IA
+        if (_pagina != 0)
+          Positioned(
+            right: 20,
+            bottom: MediaQuery.of(context).padding.bottom + 90,
+            child: const BotonAsistenteIA(),
+          ),
       ]),
     );
   }
@@ -266,6 +269,8 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
           historialPings: _historialPings,
           alHacerPing: _hacerPing,
         );
+      case 4:
+        return const PantallaRecursos();
       default:
         return PantallaSplash(alComenzar: () => _irA(1));
     }
@@ -403,7 +408,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(children: [
-          Expanded(child: _itemNav(1, Icons.library_music_rounded, 'Acordes')),
+          Expanded(child: _itemNav(1, Icons.home_rounded, 'Home')),
           // Botón central mic
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -452,7 +457,7 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
               ),
             ),
           ),
-          Expanded(child: _itemNav(4, Icons.quiz_rounded, 'Quiz')),
+          Expanded(child: _itemNav(4, Icons.library_books_rounded, 'Recursos')),
         ]),
       ),
     );

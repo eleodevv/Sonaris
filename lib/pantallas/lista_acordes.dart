@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constantes/colores.dart';
-import '../constantes/acordes.dart';
 import 'ajustes.dart';
+import 'pantalla_curso.dart';
 
 class PantallaListaAcordes extends StatelessWidget {
   final bool online;
@@ -29,6 +29,26 @@ class PantallaListaAcordes extends StatelessWidget {
       color: Color(0xFF00E676),
       icono: Icons.stairs_rounded,
       desbloqueado: true,
+      teoria: [
+        _ItemTeoria(
+          icono: Icons.music_note_rounded,
+          titulo: '¿Qué es un acorde?',
+          cuerpo:
+              'Un acorde es un conjunto de 3 o más notas tocadas al mismo tiempo. En guitarra se forman presionando cuerdas en distintos trastes.',
+        ),
+        _ItemTeoria(
+          icono: Icons.grid_on_rounded,
+          titulo: 'Cómo leer un diagrama',
+          cuerpo:
+              'Las líneas verticales son las cuerdas (de izquierda a derecha: E A D G B e). Las horizontales son los trastes. Los círculos numerados indican qué dedo usar.',
+        ),
+        _ItemTeoria(
+          icono: Icons.pan_tool_rounded,
+          titulo: 'Posición de la mano',
+          cuerpo:
+              'El pulgar va detrás del mástil. Los dedos deben presionar cerca del traste, no encima. Mantén la muñeca relajada y los dedos curvados.',
+        ),
+      ],
     ),
     _DatosNivel(
       id: 'intermedio',
@@ -38,6 +58,7 @@ class PantallaListaAcordes extends StatelessWidget {
       color: Color(0xFF64B5F6),
       icono: Icons.speed_rounded,
       desbloqueado: false,
+      teoria: [],
     ),
     _DatosNivel(
       id: 'difícil',
@@ -47,6 +68,7 @@ class PantallaListaAcordes extends StatelessWidget {
       color: Color(0xFFFFD54F),
       icono: Icons.emoji_events_rounded,
       desbloqueado: false,
+      teoria: [],
     ),
   ];
 
@@ -109,6 +131,14 @@ class PantallaListaAcordes extends StatelessWidget {
 
 // ── Datos de nivel ────────────────────────────────────────
 
+class _ItemTeoria {
+  final IconData icono;
+  final String titulo;
+  final String cuerpo;
+  const _ItemTeoria(
+      {required this.icono, required this.titulo, required this.cuerpo});
+}
+
 class _DatosNivel {
   final String id;
   final String titulo;
@@ -117,6 +147,7 @@ class _DatosNivel {
   final Color color;
   final IconData icono;
   final bool desbloqueado;
+  final List<_ItemTeoria> teoria;
 
   const _DatosNivel({
     required this.id,
@@ -126,6 +157,7 @@ class _DatosNivel {
     required this.color,
     required this.icono,
     required this.desbloqueado,
+    required this.teoria,
   });
 }
 
@@ -203,40 +235,33 @@ class _TarjetaNivel extends StatelessWidget {
             ]),
             if (datos.desbloqueado) ...[
               const SizedBox(height: 16),
-              // Chips de acordes
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: datos.acordes
-                    .map((a) => GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            alSeleccionar(a);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: datos.color.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: datos.color.withValues(alpha: 0.25)),
-                            ),
-                            child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(a,
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: datos.color)),
-                                  Text(nombreAcorde[a] ?? '',
-                                      style: const TextStyle(
-                                          fontSize: 9, color: medio)),
-                                ]),
-                          ),
-                        ))
-                    .toList(),
+              // Botón de curso/teoría
+              GestureDetector(
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const PantallaCurso())),
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: datos.color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: datos.color.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(children: [
+                    Icon(Icons.menu_book_rounded, color: datos.color, size: 16),
+                    const SizedBox(width: 10),
+                    Text('Ver lecciones del nivel',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: datos.color,
+                            fontWeight: FontWeight.w500)),
+                    const Spacer(),
+                    Icon(Icons.arrow_forward_ios_rounded,
+                        color: datos.color, size: 12),
+                  ]),
+                ),
               ),
             ],
           ]),
