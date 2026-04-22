@@ -83,7 +83,7 @@ class _EstadoChat extends State<_ChatAsistente> {
     try {
       final respuesta = await _ia.enviarMensaje(_historial, texto);
       _historial.add({'role': 'user', 'text': texto});
-      _historial.add({'role': 'model', 'text': respuesta});
+      _historial.add({'role': 'assistant', 'text': respuesta});
       setState(() {
         _mensajes.add(_Mensaje(texto: respuesta, esUsuario: false));
         _cargando = false;

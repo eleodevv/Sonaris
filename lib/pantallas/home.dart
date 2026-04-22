@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import '../constantes/colores.dart';
 import '../constantes/acordes.dart';
 import '../services/api_service.dart';
@@ -387,78 +388,74 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
   // ── Nav bar flotante tipo pill ────────────────────────────
   Widget _construirNavBar() {
     final enPractica = _pagina == 2;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
-      ),
-      child: Container(
-        height: 68,
-        decoration: BoxDecoration(
-          color: const Color(0xFF161616),
-          borderRadius: BorderRadius.circular(36),
-          border: Border.all(color: Colors.white.withOpacity(0.07)),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 24,
-                offset: const Offset(0, 8)),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(children: [
-          Expanded(child: _itemNav(1, Icons.home_rounded, 'Home')),
-          // Botón central mic
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              if (!enPractica) {
-                _irA(2);
-                return;
-              }
-              if (_procesando) return;
-              _grabando ? _detenerGrabacion() : _iniciarGrabacion();
-            },
-            child: ScaleTransition(
-              scale: _grabando ? _pulsoAnim : const AlwaysStoppedAnimation(1.0),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _grabando
-                      ? rojo
-                      : enPractica
-                          ? verde
-                          : const Color(0xFF222222),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (_grabando
-                              ? rojo
-                              : enPractica
-                                  ? verde
-                                  : Colors.transparent)
-                          .withOpacity(0.35),
-                      blurRadius: 18,
-                      spreadRadius: 2,
-                    ),
-                  ],
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF0A0A0F).withValues(alpha: 0.75),
+            border: Border(
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom,
+            top: 8,
+          ),
+          child: Row(children: [
+            Expanded(child: _itemNav(1, Icons.school_rounded, 'Aprende')),
+            // Botón central mic
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if (!enPractica) {
+                  _irA(2);
+                  return;
+                }
+                if (_procesando) return;
+                _grabando ? _detenerGrabacion() : _iniciarGrabacion();
+              },
+              child: ScaleTransition(
+                scale:
+                    _grabando ? _pulsoAnim : const AlwaysStoppedAnimation(1.0),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 52,
+                  height: 52,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _grabando
+                        ? rojo
+                        : enPractica
+                            ? verde
+                            : const Color(0xFF2A2A3A),
+                    boxShadow: [
+                      BoxShadow(
+                          color: (_grabando
+                                  ? rojo
+                                  : enPractica
+                                      ? verde
+                                      : Colors.transparent)
+                              .withValues(alpha: 0.35),
+                          blurRadius: 14,
+                          spreadRadius: 1),
+                    ],
+                  ),
+                  child: _procesando
+                      ? const Padding(
+                          padding: EdgeInsets.all(15),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 1.5, color: ambar))
+                      : Icon(_grabando ? Icons.stop_rounded : Icons.mic_rounded,
+                          color: enPractica || _grabando ? fondo : medio,
+                          size: 24),
                 ),
-                child: _procesando
-                    ? const Padding(
-                        padding: EdgeInsets.all(17),
-                        child: CircularProgressIndicator(
-                            strokeWidth: 1.5, color: ambar))
-                    : Icon(_grabando ? Icons.stop_rounded : Icons.mic_rounded,
-                        color: enPractica || _grabando ? fondo : medio,
-                        size: 26),
               ),
             ),
-          ),
-          Expanded(child: _itemNav(4, Icons.library_books_rounded, 'Recursos')),
-        ]),
+            Expanded(
+                child: _itemNav(4, Icons.library_books_rounded, 'Recursos')),
+          ]),
+        ),
       ),
     );
   }

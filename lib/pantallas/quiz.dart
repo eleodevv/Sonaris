@@ -275,37 +275,85 @@ class _EstadoQuiz extends State<PantallaQuiz>
     return FadeTransition(
       opacity: _fadeAnim,
       child: Column(children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+        // Header mejorado
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          decoration: BoxDecoration(
+            color: fondo,
+            border: Border(
+                bottom:
+                    BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+          ),
           child: Row(children: [
             GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: const Icon(Icons.close_rounded, color: medio, size: 22),
+              child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration:
+                      BoxDecoration(shape: BoxShape.circle, color: tarjeta),
+                  child:
+                      const Icon(Icons.close_rounded, color: medio, size: 18)),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progreso,
-                  minHeight: 4,
-                  backgroundColor: tarjeta2,
-                  valueColor: const AlwaysStoppedAnimation(verde),
-                ),
-              ),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progreso,
+                        minHeight: 5,
+                        backgroundColor: tarjeta2,
+                        valueColor: const AlwaysStoppedAnimation(verde),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text('Pregunta ${_indice + 1} de ${_preguntas.length}',
+                        style: const TextStyle(fontSize: 11, color: medio)),
+                  ]),
             ),
-            const SizedBox(width: 16),
-            Text('${_indice + 1}/${_preguntas.length}',
-                style: const TextStyle(color: medio, fontSize: 12)),
+            const SizedBox(width: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                  color: verde.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20)),
+              child: Text('${(_puntaje)}/${_indice}',
+                  style: const TextStyle(
+                      fontSize: 11, color: verde, fontWeight: FontWeight.w600)),
+            ),
           ]),
         ),
-        const SizedBox(height: 24),
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(children: [
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              // Tipo de pregunta
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                    color: verde.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text(
+                    p.tipo == TipoPregunta.diagramaAcorde
+                        ? 'DIAGRAMA'
+                        : p.tipo == TipoPregunta.notasAcorde
+                            ? 'NOTAS'
+                            : p.tipo == TipoPregunta.nombreAcorde
+                                ? 'NOMBRE'
+                                : 'DESCRIPCIÓN',
+                    style: const TextStyle(
+                        fontSize: 9,
+                        color: verde,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(height: 16),
               // Diagrama si aplica
               if (p.tipo == TipoPregunta.diagramaAcorde) ...[
                 Container(
@@ -321,36 +369,35 @@ class _EstadoQuiz extends State<PantallaQuiz>
                 const SizedBox(height: 20),
               ],
               // Enunciado
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: tarjeta,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(p.enunciado,
-                    style: const TextStyle(
-                        fontSize: 17, color: blanco, height: 1.4)),
-              ),
-              const SizedBox(height: 20),
-              // Opciones
-              ...p.opciones.map((op) => _OpcionWidget(
-                    texto: op,
-                    seleccionada: _seleccion == op,
-                    correcta: _respondida && op == correcta,
-                    incorrecta:
-                        _respondida && _seleccion == op && op != correcta,
-                    onTap: () => _responder(op),
-                  )),
+              Text(p.enunciado,
+                  style: const TextStyle(
+                      fontSize: 22,
+                      color: blanco,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 28),
+              // Opciones con letras
+              ...p.opciones.asMap().entries.map((e) {
+                final idx = e.key;
+                final op = e.value;
+                final letra = ['A', 'B', 'C', 'D'][idx];
+                return _OpcionWidget(
+                  texto: op,
+                  letra: letra,
+                  seleccionada: _seleccion == op,
+                  correcta: _respondida && op == correcta,
+                  incorrecta: _respondida && _seleccion == op && op != correcta,
+                  onTap: () => _responder(op),
+                );
+              }),
               const SizedBox(height: 16),
-              // Botón siguiente
               if (_respondida)
                 AnimatedOpacity(
                   opacity: 1,
                   duration: const Duration(milliseconds: 200),
                   child: _BotonVerde(
                     texto: _indice < _preguntas.length - 1
-                        ? 'Siguiente'
+                        ? 'Siguiente →'
                         : 'Ver resultado',
                     onTap: _siguiente,
                   ),
@@ -368,6 +415,7 @@ class _EstadoQuiz extends State<PantallaQuiz>
 
 class _OpcionWidget extends StatelessWidget {
   final String texto;
+  final String letra;
   final bool seleccionada;
   final bool correcta;
   final bool incorrecta;
@@ -375,6 +423,7 @@ class _OpcionWidget extends StatelessWidget {
 
   const _OpcionWidget({
     required this.texto,
+    required this.letra,
     required this.seleccionada,
     required this.correcta,
     required this.incorrecta,
@@ -416,13 +465,35 @@ class _OpcionWidget extends StatelessWidget {
           border: Border.all(color: borderColor),
         ),
         child: Row(children: [
+          // Letra de opción
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: correcta
+                    ? verde.withValues(alpha: 0.2)
+                    : incorrecta
+                        ? rojo.withValues(alpha: 0.2)
+                        : tarjeta2,
+                border: Border.all(color: borderColor)),
+            child: Center(
+              child: Text(letra,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: textColor)),
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
               child: Text(texto,
                   style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       color: textColor,
-                      fontWeight: FontWeight.w500))),
-          if (trailing != null) trailing,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3))),
+          if (trailing != null) ...[const SizedBox(width: 8), trailing],
         ]),
       ),
     );
