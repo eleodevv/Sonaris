@@ -26,10 +26,8 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK to release
-        uses: softprops/action-gh-release@v1
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: v${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: sonaris-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
