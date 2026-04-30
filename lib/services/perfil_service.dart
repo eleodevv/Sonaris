@@ -62,8 +62,8 @@ class PerfilService extends ChangeNotifier {
     _avatarAsset = asset;
     _fotoPath = null;
     _ultimoError = null;
-    _guardarDatos();
     notifyListeners();
+    _guardarDatos();
   }
 
   Future<void> seleccionarDeGaleria() async {
@@ -85,8 +85,8 @@ class PerfilService extends ChangeNotifier {
       _fotoPath = dest.path;
       _avatarAsset = null;
       _ultimoError = null;
-      await _guardarDatos();
       notifyListeners();
+      await _guardarDatos();
     } catch (e) {
       _ultimoError = 'Error al acceder a la galería: $e';
       notifyListeners();
@@ -112,8 +112,8 @@ class PerfilService extends ChangeNotifier {
       _fotoPath = dest.path;
       _avatarAsset = null;
       _ultimoError = null;
-      await _guardarDatos();
       notifyListeners();
+      await _guardarDatos();
     } catch (e) {
       _ultimoError = 'Error al acceder a la cámara: $e';
       notifyListeners();
