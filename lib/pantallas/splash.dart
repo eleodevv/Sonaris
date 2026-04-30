@@ -47,7 +47,7 @@ class PantallaSplash extends StatelessWidget {
             'L I S T O  P A R A  T O C A R',
             style: TextStyle(
               fontSize: 11,
-              color: verde,
+              color: blanco,
               letterSpacing: 3,
             ),
           ),
