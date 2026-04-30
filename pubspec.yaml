@@ -18,6 +18,7 @@ dependencies:
   audioplayers: ^5.2.1
   shared_preferences: ^2.3.2
   youtube_player_flutter: ^9.1.1
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -38,8 +39,18 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+    - assets/logo_sonaris.png
     - assets/fondo.png
     - assets/imagenFondo2.png
+    - assets/grid/grid1.png
+    - assets/grid/grid2.png
+    - assets/grid/grid3.png
+    - assets/grid/grid4.png
+    - assets/grid/grid5.png
+    - assets/grid/grid6.png
+    - assets/grid/grid7.png
+    - assets/grid/grid8.png
+    - assets/grid/grid9.png
     - assets/avatares/avatar1.png
     - assets/avatares/avatar2.png
     - assets/avatares/avatar3.png

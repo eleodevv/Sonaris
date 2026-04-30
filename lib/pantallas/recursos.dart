@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../constantes/colores.dart';
 import 'quiz.dart';
 import 'practica_acordes.dart';
@@ -134,9 +135,12 @@ class _TarjetaGrande extends StatelessWidget {
                 width: double.infinity,
                 height: 140,
                 child: imagenUrl != null
-                    ? Image.network(imagenUrl!,
+                    ? CachedNetworkImage(
+                        imageUrl: imagenUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
+                        placeholder: (context, url) =>
+                            Container(color: color.withValues(alpha: 0.08)),
+                        errorWidget: (context, url, error) =>
                             Container(color: color.withValues(alpha: 0.08)))
                     : imagenAsset != null
                         ? Image.asset(imagenAsset!,
@@ -166,15 +170,14 @@ class _TarjetaGrande extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                       color: color, borderRadius: BorderRadius.circular(20)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
                     Text('Empezar',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             color: fondo,
                             fontWeight: FontWeight.w700)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_rounded,
-                        color: fondo, size: 14),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded, color: fondo, size: 14),
                   ]),
                 ),
               ),

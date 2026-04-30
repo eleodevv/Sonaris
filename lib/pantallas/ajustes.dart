@@ -34,34 +34,49 @@ class _EstadoAjustes extends State<PantallaAjustes> {
       backgroundColor: fondo,
       body: SafeArea(
         child: Column(children: [
-          // Header
+          // Header mejorado
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 20, 20),
             child: Row(children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: medio, size: 18),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: tarjeta2,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: medio, size: 18),
+                ),
               ),
+              const SizedBox(width: 12),
               const Expanded(
-                child: Text('Ajustes',
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: blanco,
-                        fontWeight: FontWeight.w300)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Ajustes',
+                        style: TextStyle(
+                            fontSize: 22,
+                            color: blanco,
+                            fontWeight: FontWeight.w800)),
+                    SizedBox(height: 2),
+                    Text('Personaliza tu experiencia',
+                        style: TextStyle(fontSize: 12, color: medio)),
+                  ],
+                ),
               ),
             ]),
           ),
-          const SizedBox(height: 8),
           Expanded(
             child: ListView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
               children: [
-                // Avatar y nombre
+                // Avatar y nombre mejorado
                 Center(
                   child: Column(children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => _seleccionarFoto(context),
                       child: Stack(children: [
@@ -70,34 +85,45 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                           bottom: 0,
                           right: 0,
                           child: Container(
-                            width: 26,
-                            height: 26,
+                            width: 32,
+                            height: 32,
                             decoration: BoxDecoration(
                               color: verde,
                               shape: BoxShape.circle,
-                              border: Border.all(color: fondo, width: 2),
+                              border: Border.all(color: fondo, width: 2.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: verde.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ],
                             ),
-                            child: const Icon(Icons.edit_rounded,
-                                size: 13, color: fondo),
+                            child: const Icon(Icons.camera_alt_rounded,
+                                size: 15, color: fondo),
                           ),
                         ),
                       ]),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(sesion.nombre ?? '',
                         style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 22,
                             color: blanco,
-                            fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 4),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5)),
+                    const SizedBox(height: 6),
                     Text(sesion.email ?? '',
-                        style: const TextStyle(fontSize: 13, color: medio)),
-                    const SizedBox(height: 24),
+                        style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF888888),
+                            fontWeight: FontWeight.w400)),
+                    const SizedBox(height: 28),
                   ]),
                 ),
 
                 // Sección Perfil
-                _Seccion('PERFIL'),
+                const _Seccion('PERFIL'),
                 _ItemTap(
                   icono: Icons.person_outline_rounded,
                   titulo: 'Editar nombre',
@@ -108,7 +134,7 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 const SizedBox(height: 20),
 
                 // Sección Preferencias
-                _Seccion('PREFERENCIAS'),
+                const _Seccion('PREFERENCIAS'),
                 _ItemSwitch(
                   icono: Icons.notifications_outlined,
                   titulo: 'Notificaciones',
@@ -125,7 +151,7 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 const SizedBox(height: 20),
 
                 // Sección Cuenta
-                _Seccion('CUENTA'),
+                const _Seccion('CUENTA'),
                 _ItemTap(
                   icono: Icons.lock_outline_rounded,
                   titulo: 'Cambiar contraseña',
@@ -141,7 +167,7 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 const SizedBox(height: 20),
 
                 // Sección Info
-                _Seccion('INFORMACIÓN'),
+                const _Seccion('INFORMACIÓN'),
                 _ItemTap(
                   icono: Icons.monitor_heart_rounded,
                   titulo: 'Monitor de API',
@@ -187,64 +213,43 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: blanco)),
-              const SizedBox(height: 20),
-              // Avatares predefinidos
-              const Text('Avatares',
-                  style:
-                      TextStyle(fontSize: 11, color: tenue, letterSpacing: 2)),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: PerfilService.avatares.map((asset) {
-                  return GestureDetector(
-                    onTap: () {
-                      perfil.seleccionarAvatar(asset);
-                      Navigator.pop(ctx);
-                    },
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: perfil.avatarAsset == asset
-                              ? verde
-                              : Colors.white.withValues(alpha: 0.1),
-                          width: 2,
-                        ),
-                      ),
-                      child: ClipOval(
-                          child: Image.asset(asset,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.topCenter)),
-                    ),
-                  );
-                }).toList(),
-              ),
               const SizedBox(height: 24),
-              // Opciones galería/cámara
-              const Text('O elige una foto',
-                  style:
-                      TextStyle(fontSize: 11, color: tenue, letterSpacing: 2)),
-              const SizedBox(height: 12),
               Row(children: [
                 Expanded(
                   child: GestureDetector(
                     onTap: () async {
                       Navigator.pop(ctx);
                       await perfil.seleccionarDeGaleria();
+                      if (mounted && perfil.ultimoError != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(perfil.ultimoError!,
+                                style: const TextStyle(color: blanco)),
+                            backgroundColor: rojo,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          ),
+                        );
+                      }
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                           color: tarjeta2,
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: verde.withValues(alpha: 0.2), width: 1)),
                       child: const Column(children: [
                         Icon(Icons.photo_library_rounded,
-                            color: medio, size: 22),
-                        SizedBox(height: 6),
+                            color: verde, size: 28),
+                        SizedBox(height: 8),
                         Text('Galería',
-                            style: TextStyle(fontSize: 12, color: medio)),
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: blanco,
+                                fontWeight: FontWeight.w600)),
                       ]),
                     ),
                   ),
@@ -255,17 +260,35 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                     onTap: () async {
                       Navigator.pop(ctx);
                       await perfil.tomarFoto();
+                      if (mounted && perfil.ultimoError != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(perfil.ultimoError!,
+                                style: const TextStyle(color: blanco)),
+                            backgroundColor: rojo,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          ),
+                        );
+                      }
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                           color: tarjeta2,
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: verde.withValues(alpha: 0.2), width: 1)),
                       child: const Column(children: [
-                        Icon(Icons.camera_alt_rounded, color: medio, size: 22),
-                        SizedBox(height: 6),
+                        Icon(Icons.camera_alt_rounded, color: verde, size: 28),
+                        SizedBox(height: 8),
                         Text('Cámara',
-                            style: TextStyle(fontSize: 12, color: medio)),
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: blanco,
+                                fontWeight: FontWeight.w600)),
                       ]),
                     ),
                   ),
@@ -474,10 +497,13 @@ class _Seccion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 8),
+        padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
         child: Text(titulo,
-            style:
-                const TextStyle(fontSize: 10, color: tenue, letterSpacing: 2)),
+            style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF666666),
+                letterSpacing: 1.8,
+                fontWeight: FontWeight.w700)),
       );
 }
 
@@ -502,27 +528,48 @@ class _ItemTap extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: tarjeta,
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(children: [
-          Icon(icono, color: c, size: 18),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: c.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icono, color: c, size: 20),
+          ),
           const SizedBox(width: 14),
           Expanded(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Text(titulo, style: TextStyle(fontSize: 14, color: c)),
+                Text(titulo,
+                    style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600, color: c)),
                 if (subtitulo != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(subtitulo!,
-                      style: const TextStyle(fontSize: 12, color: medio)),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF777777),
+                          fontWeight: FontWeight.w400)),
                 ],
               ])),
-          Icon(Icons.arrow_forward_ios_rounded, color: tenue, size: 12),
+          Icon(Icons.arrow_forward_ios_rounded,
+              color: c.withValues(alpha: 0.4), size: 14),
         ]),
       ),
     );
@@ -545,20 +592,38 @@ class _ItemSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-          color: tarjeta, borderRadius: BorderRadius.circular(14)),
+          color: tarjeta,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ]),
       child: Row(children: [
-        Icon(icono, color: blanco, size: 18),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: blanco.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child:
+              const Icon(Icons.notifications_outlined, color: blanco, size: 20),
+        ),
         const SizedBox(width: 14),
         Expanded(
             child: Text(titulo,
-                style: const TextStyle(fontSize: 14, color: blanco))),
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w600, color: blanco))),
         Switch(
           value: valor,
           onChanged: onChanged,
-          activeColor: verde,
+          activeThumbColor: verde,
           inactiveThumbColor: tenue,
           inactiveTrackColor: tarjeta2,
         ),
@@ -581,17 +646,38 @@ class _ItemInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-          color: tarjeta, borderRadius: BorderRadius.circular(14)),
+          color: tarjeta,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ]),
       child: Row(children: [
-        Icon(icono, color: medio, size: 18),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Color(0xFF666666).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icono, color: Color(0xFF888888), size: 20),
+        ),
         const SizedBox(width: 14),
         Expanded(
             child: Text(titulo,
-                style: const TextStyle(fontSize: 14, color: blanco))),
-        Text(valor, style: const TextStyle(fontSize: 13, color: medio)),
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w600, color: blanco))),
+        Text(valor,
+            style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF888888),
+                fontWeight: FontWeight.w500)),
       ]),
     );
   }

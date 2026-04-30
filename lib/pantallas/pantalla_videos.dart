@@ -52,7 +52,7 @@ class ItemModulo {
 // ── Contenido del Módulo 1 ────────────────────────────────
 
 final _itemsModulo1 = [
-  ItemModulo.video(const VideoModulo(
+  const ItemModulo.video(VideoModulo(
     titulo: '¿Qué es la guitarra y cómo se usa?',
     subtitulo: 'Módulo 1 · Video 1',
     youtubeId: 'g6h2ztdqCc8',
@@ -67,7 +67,7 @@ final _itemsModulo1 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
   )),
-  ItemModulo.video(const VideoModulo(
+  const ItemModulo.video(VideoModulo(
     titulo: 'Partes de la guitarra',
     subtitulo: 'Módulo 1 · Video 2',
     youtubeId: 'QQQzzLrC95c',
@@ -83,7 +83,7 @@ final _itemsModulo1 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
   )),
-  ItemModulo.video(const VideoModulo(
+  const ItemModulo.video(VideoModulo(
     titulo: 'Cómo sostener la guitarra correctamente',
     subtitulo: 'Módulo 1 · Video 3',
     youtubeId: '44xkDPJdW2Q',
@@ -99,7 +99,7 @@ final _itemsModulo1 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
   )),
-  ItemModulo.video(const VideoModulo(
+  const ItemModulo.video(VideoModulo(
     titulo: 'Las cuerdas y cómo se afinan',
     subtitulo: 'Módulo 1 · Video 4',
     youtubeId: 'p2i9tyWpqDA',
@@ -114,7 +114,7 @@ final _itemsModulo1 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
   )),
-  ItemModulo.video(const VideoModulo(
+  const ItemModulo.video(VideoModulo(
     titulo: 'Tu primer sonido (antes de acordes)',
     subtitulo: 'Módulo 1 · Video 5',
     youtubeId: 'l3YyTCqwIn0',
@@ -440,8 +440,11 @@ class _TarjetaVideo extends StatelessWidget {
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: verde.withValues(alpha: 0.12)),
-                          child: const Icon(Icons.person_rounded,
-                              color: verde, size: 16)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: Image.asset('assets/logo_sonaris.png',
+                                fit: BoxFit.contain),
+                          )),
                       const SizedBox(width: 8),
                       Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,8 +560,11 @@ class PantallaDetalleVideo extends StatelessWidget {
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: verde.withValues(alpha: 0.15)),
-                            child: const Icon(Icons.person_rounded,
-                                color: verde, size: 22)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Image.asset('assets/logo_sonaris.png',
+                                  fit: BoxFit.contain),
+                            )),
                         const SizedBox(width: 12),
                         Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,7 +596,7 @@ class PantallaDetalleVideo extends StatelessWidget {
                           child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.check_circle_rounded,
+                                const Icon(Icons.check_circle_rounded,
                                     color: verde, size: 16),
                                 const SizedBox(width: 10),
                                 Expanded(

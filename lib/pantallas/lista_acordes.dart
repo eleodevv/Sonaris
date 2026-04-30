@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../constantes/colores.dart';
 import 'ajustes.dart';
 import 'pantalla_videos.dart';
@@ -20,7 +21,7 @@ class PantallaListaAcordes extends StatelessWidget {
   });
 
   static final _modulos = [
-    _DatosModulo(
+    const _DatosModulo(
       numero: '1',
       titulo: 'Conoce tu guitarra',
       descripcion: 'Fundamentos básicos para empezar',
@@ -29,12 +30,12 @@ class PantallaListaAcordes extends StatelessWidget {
       thumb: 'https://img.youtube.com/vi/g6h2ztdqCc8/hqdefault.jpg',
       desbloqueado: true,
     ),
-    _DatosModulo(
+    const _DatosModulo(
       numero: '2',
       titulo: 'Acordes básicos',
       descripcion: 'Aprende A, Am y D — tus primeros acordes',
       videoCount: 5,
-      color: const Color(0xFF64B5F6),
+      color: Color(0xFF64B5F6),
       thumb: 'https://img.youtube.com/vi/g6h2ztdqCc8/hqdefault.jpg',
       desbloqueado: false,
     ),
@@ -169,11 +170,18 @@ class _TarjetaModulo extends StatelessWidget {
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(20)),
               child: Stack(children: [
-                Image.network(datos.thumb,
+                CachedNetworkImage(
+                    imageUrl: datos.thumb,
                     width: double.infinity,
                     height: 160,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    placeholder: (context, url) => Container(
+                        height: 160,
+                        color: tarjeta2,
+                        child: Center(
+                            child: Icon(Icons.music_note_rounded,
+                                color: datos.color, size: 40))),
+                    errorWidget: (context, url, error) => Container(
                         height: 160,
                         color: tarjeta2,
                         child: Center(
