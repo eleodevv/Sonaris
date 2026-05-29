@@ -566,26 +566,47 @@ class _EstadoHome extends State<PantallaHome> with TickerProviderStateMixin {
       onTap: () => _irA(idx),
       child: SizedBox(
         height: 56,
-        child: CustomPaint(
-          painter: _NavItemPainter(seleccionado: sel),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            AnimatedScale(
-              scale: sel ? 1.15 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(icono, color: sel ? verde : tenue, size: 20),
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.symmetric(
+              horizontal: sel ? 16 : 12,
+              vertical: 8,
             ),
-            const SizedBox(height: 3),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 10,
-                letterSpacing: 0.3,
-                color: sel ? verde : tenue,
-                fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
+            decoration: BoxDecoration(
+              color: sel ? verde.withValues(alpha: 0.14) : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              AnimatedScale(
+                scale: sel ? 1.05 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(icono, color: sel ? verde : tenue, size: 21),
               ),
-              child: Text(etiqueta),
-            ),
-          ]),
+              // La etiqueta solo aparece cuando está seleccionado
+              ClipRect(
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.centerLeft,
+                  widthFactor: sel ? 1.0 : 0.0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      etiqueta,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 0.2,
+                        color: verde,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ),
         ),
       ),
     );
@@ -977,38 +998,4 @@ class _MicButtonPainter extends CustomPainter {
   @override
   bool shouldRepaint(_MicButtonPainter old) =>
       old.activo != activo || old.grabando != grabando;
-}
-
-// ── Painter ítem de navegación ────────────────────────────
-
-class _NavItemPainter extends CustomPainter {
-  final bool seleccionado;
-  const _NavItemPainter({required this.seleccionado});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (!seleccionado) return;
-
-    // Línea indicadora arriba con gradiente
-    final paintLinea = Paint()
-      ..shader = LinearGradient(
-        colors: [Colors.transparent, verde, Colors.transparent],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, 2))
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(
-      Offset(size.width * 0.2, 0),
-      Offset(size.width * 0.8, 0),
-      paintLinea,
-    );
-
-    // Punto brillante en el centro de la línea
-    final paintPunto = Paint()
-      ..color = verde.withValues(alpha: 0.8)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    canvas.drawCircle(Offset(size.width / 2, 1), 2, paintPunto);
-  }
-
-  @override
-  bool shouldRepaint(_NavItemPainter old) => old.seleccionado != seleccionado;
 }

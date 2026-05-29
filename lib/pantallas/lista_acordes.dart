@@ -23,12 +23,13 @@ class PantallaListaAcordes extends StatelessWidget {
   static final _modulos = [
     const _DatosModulo(
       numero: '1',
-      titulo: 'Conoce tu guitarra',
-      descripcion: 'Fundamentos básicos para empezar',
-      videoCount: 5,
+      titulo: 'Fundamentos',
+      descripcion: 'Conoce tu guitarra desde cero',
+      videoCount: 3,
       color: verde,
-      thumb: 'https://img.youtube.com/vi/g6h2ztdqCc8/hqdefault.jpg',
+      thumb: 'assets/banner_fundamentos.png',
       desbloqueado: true,
+      esLocal: true,
     ),
     const _DatosModulo(
       numero: '2',
@@ -36,8 +37,9 @@ class PantallaListaAcordes extends StatelessWidget {
       descripcion: 'Aprende A, Am y D — tus primeros acordes',
       videoCount: 5,
       color: Color(0xFF64B5F6),
-      thumb: 'https://img.youtube.com/vi/g6h2ztdqCc8/hqdefault.jpg',
+      thumb: 'assets/banner_acordes.png',
       desbloqueado: false,
+      esLocal: true,
     ),
   ];
 
@@ -114,8 +116,10 @@ class PantallaListaAcordes extends StatelessWidget {
             final m = _modulos[i];
             return _TarjetaModulo(
               datos: m,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const PantallaVideos())),
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => PantallaVideos(modulo: i + 1))),
             );
           },
         ),
@@ -132,6 +136,7 @@ class _DatosModulo {
   final Color color;
   final String thumb;
   final bool desbloqueado;
+  final bool esLocal;
 
   const _DatosModulo({
     required this.numero,
@@ -141,6 +146,7 @@ class _DatosModulo {
     required this.color,
     required this.thumb,
     this.desbloqueado = false,
+    this.esLocal = false,
   });
 }
 
@@ -170,23 +176,26 @@ class _TarjetaModulo extends StatelessWidget {
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(20)),
               child: Stack(children: [
-                CachedNetworkImage(
-                    imageUrl: datos.thumb,
-                    width: double.infinity,
-                    height: 160,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
+                datos.esLocal
+                    ? Image.asset(datos.thumb,
+                        width: double.infinity, height: 160, fit: BoxFit.cover)
+                    : CachedNetworkImage(
+                        imageUrl: datos.thumb,
+                        width: double.infinity,
                         height: 160,
-                        color: tarjeta2,
-                        child: Center(
-                            child: Icon(Icons.music_note_rounded,
-                                color: datos.color, size: 40))),
-                    errorWidget: (context, url, error) => Container(
-                        height: 160,
-                        color: tarjeta2,
-                        child: Center(
-                            child: Icon(Icons.music_note_rounded,
-                                color: datos.color, size: 40)))),
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                            height: 160,
+                            color: tarjeta2,
+                            child: Center(
+                                child: Icon(Icons.music_note_rounded,
+                                    color: datos.color, size: 40))),
+                        errorWidget: (context, url, error) => Container(
+                            height: 160,
+                            color: tarjeta2,
+                            child: Center(
+                                child: Icon(Icons.music_note_rounded,
+                                    color: datos.color, size: 40)))),
                 Container(
                     height: 160,
                     decoration: BoxDecoration(

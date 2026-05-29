@@ -241,7 +241,7 @@ class PantallaBienvenida extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     decoration: BoxDecoration(
-                      color: verde,
+                      color: const Color(0xFF7BAF8E),
                       borderRadius: BorderRadius.circular(32),
                     ),
                     child: const Text(

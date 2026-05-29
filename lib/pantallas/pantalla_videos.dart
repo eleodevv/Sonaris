@@ -88,57 +88,119 @@ final _itemsModulo1 = [
     esShort: true,
   )),
   const ItemModulo.video(VideoModulo(
-    titulo: 'Cómo sostener la guitarra correctamente',
+    titulo: 'Cómo afinar mi guitarra',
     subtitulo: 'Módulo 1 · Video 3',
-    youtubeId: '44xkDPJdW2Q',
-    duracion: '',
+    youtubeId: 'S9ryVINTbLo',
+    duracion: 'Short',
     descripcion:
-        'Aprende la postura correcta para tocar guitarra sentado, la posición de ambas manos y los errores más comunes a evitar.',
+        'Aprende a afinar tu guitarra correctamente usando un afinador o de oído para que siempre suene bien.',
     aprenderas: [
-      'Posición correcta sentado',
-      'Cómo colocar la mano izquierda en el diapasón',
-      'Posición de la mano derecha para rasguear',
-      'Errores comunes que debes evitar'
+      'Cómo usar un afinador digital',
+      'Nombres y notas de cada cuerda',
+      'Técnica para girar las clavijas correctamente',
+      'Verificar la afinación de oído'
     ],
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
+    esShort: true,
+  )),
+];
+
+// ── Contenido del Módulo 2: Acordes básicos ───────────────
+
+final _itemsModulo2 = [
+  const ItemModulo.video(VideoModulo(
+    titulo: 'Acorde DO (C)',
+    subtitulo: 'Módulo 2 · Video 1',
+    youtubeId: 'xFMDVSPvzr8',
+    duracion: 'Short',
+    descripcion:
+        'Aprende a tocar el acorde de DO Mayor (C), con forma diagonal en el diapasón.',
+    aprenderas: [
+      'Posición de los dedos para el acorde C',
+      'Forma diagonal en trastes 1, 2 y 3',
+      'Cuerdas que suenan y cuáles no',
+      'Consejos para que suene limpio'
+    ],
+    instructor: 'Sonaris Team',
+    rolInstructor: 'Equipo de instructores de guitarra',
+    esShort: true,
   )),
   const ItemModulo.video(VideoModulo(
-    titulo: 'Las cuerdas y cómo se afinan',
-    subtitulo: 'Módulo 1 · Video 4',
-    youtubeId: 'p2i9tyWpqDA',
-    duracion: '',
+    titulo: 'Acorde LA (A)',
+    subtitulo: 'Módulo 2 · Video 2',
+    youtubeId: 'dH5TwByFSTE',
+    duracion: 'Short',
     descripcion:
-        'Aprende los nombres de las 6 cuerdas de la guitarra y cómo afinarlas correctamente antes de tocar.',
+        'Aprende a tocar el acorde de LA Mayor (A), uno de los acordes más usados en guitarra.',
     aprenderas: [
-      'Nombres de las 6 cuerdas: Mi, La, Re, Sol, Si, Mi',
-      'Cómo usar un afinador',
-      'Por qué es importante afinar antes de practicar'
+      'Posición de los dedos para el acorde A',
+      'Cuerdas que se tocan y cuáles no',
+      'Consejos para que suene limpio',
+      'Ejercicio de cambio de acorde'
     ],
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
+    esShort: true,
   )),
   const ItemModulo.video(VideoModulo(
-    titulo: 'Tu primer sonido (antes de acordes)',
-    subtitulo: 'Módulo 1 · Video 5',
-    youtubeId: 'l3YyTCqwIn0',
-    duracion: '',
+    titulo: 'Acorde RE (D)',
+    subtitulo: 'Módulo 2 · Video 3',
+    youtubeId: 'uBwDPGuVia8',
+    duracion: 'Short',
     descripcion:
-        'Antes de aprender acordes, practica tu primer rasgueo, toca cuerdas al aire y siente el ritmo básico.',
+        'Aprende a tocar el acorde de RE Mayor (D), con forma de triángulo en los trastes 2 y 3.',
     aprenderas: [
-      'Rasgueo básico hacia abajo',
-      'Tocar cuerdas al aire',
-      'Ritmo simple para principiantes'
+      'Posición de los dedos para el acorde D',
+      'Solo se tocan 4 cuerdas (D-G-B-e)',
+      'Forma de triángulo en el diapasón',
+      'Transición entre A y D'
     ],
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
+    esShort: true,
+  )),
+  const ItemModulo.video(VideoModulo(
+    titulo: 'Acorde MI Mayor (E)',
+    subtitulo: 'Módulo 2 · Video 4',
+    youtubeId: 'cUF3pDTZVcc',
+    duracion: 'Short',
+    descripcion:
+        'Aprende a tocar el acorde de MI Mayor (E), donde todas las cuerdas suenan.',
+    aprenderas: [
+      'Posición de los dedos para el acorde E',
+      'Todas las cuerdas suenan en este acorde',
+      'Colocación en trastes 1 y 2',
+      'Transición entre D y E'
+    ],
+    instructor: 'Sonaris Team',
+    rolInstructor: 'Equipo de instructores de guitarra',
+    esShort: true,
+  )),
+  const ItemModulo.video(VideoModulo(
+    titulo: 'Acorde SOL (G)',
+    subtitulo: 'Módulo 2 · Video 5',
+    youtubeId: 'fHBCjd8uNJ4',
+    duracion: 'Short',
+    descripcion:
+        'Aprende a tocar el acorde de SOL Mayor (G), con los dedos en los extremos del mástil.',
+    aprenderas: [
+      'Posición de los dedos para el acorde G',
+      'Todas las cuerdas suenan',
+      'Estiramiento de dedos en el diapasón',
+      'Transición entre E y G'
+    ],
+    instructor: 'Sonaris Team',
+    rolInstructor: 'Equipo de instructores de guitarra',
+    esShort: true,
   )),
 ];
 
 // ── Pantalla principal ────────────────────────────────────
 
 class PantallaVideos extends StatefulWidget {
-  const PantallaVideos({super.key});
+  final int modulo;
+  const PantallaVideos({super.key, this.modulo = 1});
   @override
   State<PantallaVideos> createState() => _EstadoPantallaVideos();
 }
@@ -149,6 +211,9 @@ class _EstadoPantallaVideos extends State<PantallaVideos>
   late AnimationController _headerCtrl;
   late Animation<double> _headerFade;
   late Animation<Offset> _headerSlide;
+
+  List<ItemModulo> get _items =>
+      widget.modulo == 2 ? _itemsModulo2 : _itemsModulo1;
 
   @override
   void initState() {
@@ -187,13 +252,13 @@ class _EstadoPantallaVideos extends State<PantallaVideos>
 
   bool _estaDesbloqueado(int indice) {
     if (indice == 0) return true;
-    final videos = _itemsModulo1.where((i) => i.esVideo).toList();
+    final videos = _items.where((i) => i.esVideo).toList();
     return _completados.contains(videos[indice - 1].video!.youtubeId);
   }
 
   @override
   Widget build(BuildContext context) {
-    final videos = _itemsModulo1.where((i) => i.esVideo).toList();
+    final videos = _items.where((i) => i.esVideo).toList();
     final totalVideos = videos.length;
     final completados = _completados.length.clamp(0, totalVideos);
     final progreso = totalVideos > 0 ? completados / totalVideos : 0.0;
@@ -251,9 +316,9 @@ class _EstadoPantallaVideos extends State<PantallaVideos>
                                 border: Border.all(
                                     color: verde.withValues(alpha: 0.4)),
                               ),
-                              child: const Text(
-                                'MÓDULO 1',
-                                style: TextStyle(
+                              child: Text(
+                                'MÓDULO ${widget.modulo}',
+                                style: const TextStyle(
                                   fontSize: 10,
                                   color: verde,
                                   letterSpacing: 2,
@@ -262,9 +327,11 @@ class _EstadoPantallaVideos extends State<PantallaVideos>
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Conoce tu guitarra',
-                              style: TextStyle(
+                            Text(
+                              widget.modulo == 2
+                                  ? 'Acordes básicos'
+                                  : 'Fundamentos',
+                              style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
                                 color: blanco,

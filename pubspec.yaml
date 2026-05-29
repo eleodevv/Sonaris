@@ -42,11 +42,14 @@ flutter:
     - assets/logo_sonaris.png
     - assets/fondo.png
     - assets/imagenFondo2.png
+    - assets/imagenfondo.png
     - assets/onboarding1.png
     - assets/onboarding2.png
     - assets/onboarding3.png
     - assets/onboarding4.png
     - assets/onboarding5.png
+    - assets/banner_fundamentos.png
+    - assets/banner_acordes.png
     - assets/grid/grid1.png
     - assets/grid/grid2.png
     - assets/grid/grid3.png
