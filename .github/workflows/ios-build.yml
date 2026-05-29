@@ -1,7 +1,9 @@
-name: Build iOS & Android
+name: Build APK + IPA
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ master ]
 
 permissions:
   contents: write
@@ -17,6 +19,11 @@ jobs:
           channel: 'stable'
       - run: flutter pub get
       - run: flutter build apk --release
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonaris-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
       - name: Upload APK to release
         uses: ncipollo/release-action@v1
         with:
@@ -38,7 +45,7 @@ jobs:
       - run: flutter pub get
       - run: pod repo update
         working-directory: ios
-      - name: Disable codesigning in Xcode project
+      - name: Disable codesigning
         run: |
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = ""/g' ios/Runner.xcodeproj/project.pbxproj
@@ -47,9 +54,14 @@ jobs:
         working-directory: build/ios/iphoneos
       - run: mv Runner.app/ Payload
         working-directory: build/ios/iphoneos
-      - name: Zip output
+      - name: Create IPA
         run: zip -qq -r -9 FlutterIpaExport.ipa Payload
         working-directory: build/ios/iphoneos
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonaris-release.ipa
+          path: build/ios/iphoneos/FlutterIpaExport.ipa
       - name: Upload IPA to release
         uses: ncipollo/release-action@v1
         with:
