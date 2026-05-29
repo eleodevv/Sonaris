@@ -70,7 +70,7 @@ class _PintorDiagrama extends CustomPainter {
     // ── Trastes horizontales ──────────────────────────────
     final esNut = diagrama.trasteInicio == 1;
     canvas.drawLine(
-      Offset(padLado, padTop),
+      const Offset(padLado, padTop),
       Offset(padLado + ancho, padTop),
       esNut ? pinturaNut : pinturaRed,
     );

@@ -26,9 +26,9 @@ class PantallaBienvenida extends StatelessWidget {
       body: DefaultTextStyle(
         style: const TextStyle(decoration: TextDecoration.none),
         child: Column(children: [
-          // Grid masonry asimétrico (68% de la pantalla)
+          // Grid masonry asimétrico (64% de la pantalla)
           SizedBox(
-            height: h * 0.68,
+            height: h * 0.64,
             child: Stack(children: [
               Padding(
                 padding: const EdgeInsets.all(0),
@@ -220,17 +220,17 @@ class PantallaBienvenida extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const Text(
                   'Aprende acordes, técnicas y canciones con planes personalizados. Tu viaje musical comienza aquí.',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF999999),
+                    fontSize: 16,
+                    color: Color(0xFFBBBBBB),
                     height: 1.5,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
                 // Botón principal
                 GestureDetector(
                   onTap: () => Navigator.push(

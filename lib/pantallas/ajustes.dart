@@ -19,6 +19,15 @@ class PantallaAjustes extends StatefulWidget {
 class _EstadoAjustes extends State<PantallaAjustes> {
   bool _notificaciones = true;
   bool _sonidos = true;
+  bool _entrada = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 80), () {
+      if (mounted) setState(() => _entrada = true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,28 +50,52 @@ class _EstadoAjustes extends State<PantallaAjustes> {
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: tarjeta2,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        tarjeta2,
+                        tarjeta.withValues(alpha: 0.6),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: medio, size: 18),
+                      color: blanco, size: 16),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Ajustes',
                         style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 24,
                             color: blanco,
-                            fontWeight: FontWeight.w800)),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3)),
                     SizedBox(height: 2),
                     Text('Personaliza tu experiencia',
-                        style: TextStyle(fontSize: 12, color: medio)),
+                        style: TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF999999),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.1)),
                   ],
                 ),
               ),
@@ -77,47 +110,77 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 Center(
                   child: Column(children: [
                     const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () => _seleccionarFoto(context),
-                      child: Stack(children: [
-                        _AvatarWidget(iniciales: iniciales),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: verde,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: fondo, width: 2.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: verde.withValues(alpha: 0.4),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
+                    AnimatedOpacity(
+                      opacity: _entrada ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOut,
+                      child: AnimatedScale(
+                        scale: _entrada ? 1.0 : 0.6,
+                        duration: const Duration(milliseconds: 700),
+                        curve: Curves.elasticOut,
+                        child: GestureDetector(
+                          onTap: () => _seleccionarFoto(context),
+                          child: Stack(clipBehavior: Clip.none, children: [
+                            _AvatarWidget(iniciales: iniciales),
+                            Positioned(
+                              bottom: -2,
+                              right: -2,
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF6B3DFF),
+                                      morado,
+                                    ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: fondo, width: 2.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: morado.withValues(alpha: 0.6),
+                                      blurRadius: 12,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
                                 ),
-                              ],
+                                child: const Icon(Icons.camera_alt_rounded,
+                                    size: 16, color: blanco),
+                              ),
                             ),
-                            child: const Icon(Icons.camera_alt_rounded,
-                                size: 15, color: fondo),
-                          ),
+                          ]),
                         ),
-                      ]),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Text(sesion.nombre ?? '',
-                        style: const TextStyle(
-                            fontSize: 22,
-                            color: blanco,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5)),
-                    const SizedBox(height: 6),
-                    Text(sesion.email ?? '',
-                        style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF888888),
-                            fontWeight: FontWeight.w400)),
+                    const SizedBox(height: 18),
+                    AnimatedOpacity(
+                      opacity: _entrada ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOut,
+                      child: AnimatedSlide(
+                        offset: _entrada ? Offset.zero : const Offset(0, 0.3),
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOutCubic,
+                        child: Column(children: [
+                          Text(sesion.nombre ?? '',
+                              style: const TextStyle(
+                                  fontSize: 24,
+                                  color: blanco,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5)),
+                          const SizedBox(height: 6),
+                          Text(sesion.email ?? '',
+                              style: const TextStyle(
+                                  fontSize: 13.5,
+                                  color: Color(0xFFA8A8A8),
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.1)),
+                        ]),
+                      ),
+                    ),
                     const SizedBox(height: 28),
                   ]),
                 ),
@@ -125,9 +188,11 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 // Sección Perfil
                 const _Seccion('PERFIL'),
                 _ItemTap(
+                  index: 0,
                   icono: Icons.person_outline_rounded,
                   titulo: 'Editar nombre',
                   subtitulo: sesion.nombre ?? '',
+                  color: morado,
                   onTap: () => _editarNombre(context, sesion),
                 ),
 
@@ -136,12 +201,14 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 // Sección Preferencias
                 const _Seccion('PREFERENCIAS'),
                 _ItemSwitch(
+                  index: 1,
                   icono: Icons.notifications_outlined,
                   titulo: 'Notificaciones',
                   valor: _notificaciones,
                   onChanged: (v) => setState(() => _notificaciones = v),
                 ),
                 _ItemSwitch(
+                  index: 2,
                   icono: Icons.volume_up_outlined,
                   titulo: 'Sonidos de la app',
                   valor: _sonidos,
@@ -153,11 +220,14 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                 // Sección Cuenta
                 const _Seccion('CUENTA'),
                 _ItemTap(
+                  index: 3,
                   icono: Icons.lock_outline_rounded,
                   titulo: 'Cambiar contraseña',
+                  color: ambar,
                   onTap: () => _cambiarPassword(context, sesion),
                 ),
                 _ItemTap(
+                  index: 4,
                   icono: Icons.logout_rounded,
                   titulo: 'Cerrar sesión',
                   color: rojo,
@@ -168,24 +238,11 @@ class _EstadoAjustes extends State<PantallaAjustes> {
 
                 // Sección Info
                 const _Seccion('INFORMACIÓN'),
-                _ItemTap(
-                  icono: Icons.monitor_heart_rounded,
-                  titulo: 'Monitor de API',
-                  subtitulo: 'Estado y latencia del servidor',
-                  onTap: () {
-                    Navigator.pop(context);
-                    widget.alAbrirApiMonitor?.call();
-                  },
-                ),
                 const _ItemInfo(
+                  index: 5,
                   icono: Icons.info_outline_rounded,
                   titulo: 'Versión',
                   valor: '1.0.0',
-                ),
-                const _ItemInfo(
-                  icono: Icons.music_note_rounded,
-                  titulo: 'Modelo IA',
-                  valor: 'MLP v1 · 6 acordes',
                 ),
               ],
             ),
@@ -497,22 +554,44 @@ class _Seccion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
-        child: Text(titulo,
-            style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF666666),
-                letterSpacing: 1.8,
-                fontWeight: FontWeight.w700)),
+        padding: const EdgeInsets.only(left: 4, bottom: 14, top: 4),
+        child: Row(children: [
+          Container(
+            width: 4,
+            height: 14,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [morado, Color(0xFF6B3DFF)],
+              ),
+              borderRadius: BorderRadius.circular(2),
+              boxShadow: [
+                BoxShadow(
+                  color: morado.withValues(alpha: 0.55),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(titulo,
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFFB0B0B0),
+                  letterSpacing: 2.5,
+                  fontWeight: FontWeight.w800)),
+        ]),
       );
 }
 
-class _ItemTap extends StatelessWidget {
+class _ItemTap extends StatefulWidget {
   final IconData icono;
   final String titulo;
   final String? subtitulo;
   final Color? color;
   final VoidCallback onTap;
+  final int index;
 
   const _ItemTap({
     required this.icono,
@@ -520,165 +599,365 @@ class _ItemTap extends StatelessWidget {
     this.subtitulo,
     this.color,
     required this.onTap,
+    this.index = 0,
   });
 
   @override
+  State<_ItemTap> createState() => _ItemTapState();
+}
+
+class _ItemTapState extends State<_ItemTap>
+    with SingleTickerProviderStateMixin {
+  bool _pressed = false;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 120 + widget.index * 60), () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final c = color ?? blanco;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: tarjeta,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: c.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icono, color: c, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Text(titulo,
-                    style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600, color: c)),
-                if (subtitulo != null) ...[
-                  const SizedBox(height: 4),
-                  Text(subtitulo!,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF777777),
-                          fontWeight: FontWeight.w400)),
+    final c = widget.color ?? blanco;
+    final isDestructive = widget.color == rojo;
+
+    return AnimatedOpacity(
+      opacity: _visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, 0.12),
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          onTap: widget.onTap,
+          child: AnimatedScale(
+            scale: _pressed ? 0.98 : 1.0,
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOut,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDestructive
+                      ? [
+                          tarjeta,
+                          rojo.withValues(alpha: 0.06),
+                        ]
+                      : [
+                          tarjeta,
+                          tarjeta2.withValues(alpha: 0.6),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDestructive
+                      ? rojo.withValues(alpha: 0.28)
+                      : Colors.white.withValues(alpha: 0.05),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Colors.black.withValues(alpha: _pressed ? 0.18 : 0.1),
+                    blurRadius: _pressed ? 14 : 8,
+                    offset: const Offset(0, 2),
+                  ),
+                  if (isDestructive)
+                    BoxShadow(
+                      color: rojo.withValues(alpha: 0.08),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
                 ],
-              ])),
-          Icon(Icons.arrow_forward_ios_rounded,
-              color: c.withValues(alpha: 0.4), size: 14),
-        ]),
+              ),
+              child: Row(children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        c.withValues(alpha: 0.18),
+                        c.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: c.withValues(alpha: 0.18),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Icon(widget.icono, color: c, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(widget.titulo,
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: c)),
+                      if (widget.subtitulo != null) ...[
+                        const SizedBox(height: 4),
+                        Text(widget.subtitulo!,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF888888),
+                                fontWeight: FontWeight.w400)),
+                      ],
+                    ])),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    color: c.withValues(alpha: 0.4), size: 14),
+              ]),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _ItemSwitch extends StatelessWidget {
+class _ItemSwitch extends StatefulWidget {
   final IconData icono;
   final String titulo;
   final bool valor;
   final ValueChanged<bool> onChanged;
+  final int index;
 
   const _ItemSwitch({
     required this.icono,
     required this.titulo,
     required this.valor,
     required this.onChanged,
+    this.index = 0,
   });
 
   @override
+  State<_ItemSwitch> createState() => _ItemSwitchState();
+}
+
+class _ItemSwitchState extends State<_ItemSwitch> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 120 + widget.index * 60), () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-          color: tarjeta,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    final on = widget.valor;
+    return AnimatedOpacity(
+      opacity: _visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, 0.12),
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                tarjeta,
+                tarjeta2.withValues(alpha: 0.6),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: on
+                  ? morado.withValues(alpha: 0.25)
+                  : Colors.white.withValues(alpha: 0.05),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+              if (on)
+                BoxShadow(
+                  color: morado.withValues(alpha: 0.12),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: Row(children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: on
+                      ? [
+                          morado.withValues(alpha: 0.22),
+                          morado.withValues(alpha: 0.10),
+                        ]
+                      : [
+                          blanco.withValues(alpha: 0.10),
+                          blanco.withValues(alpha: 0.04),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  if (on)
+                    BoxShadow(
+                      color: morado.withValues(alpha: 0.32),
+                      blurRadius: 10,
+                    ),
+                ],
+              ),
+              child: Icon(widget.icono, color: on ? morado : blanco, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+                child: Text(widget.titulo,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: blanco))),
+            Switch(
+              value: widget.valor,
+              onChanged: (v) {
+                HapticFeedback.selectionClick();
+                widget.onChanged(v);
+              },
+              activeThumbColor: blanco,
+              activeTrackColor: morado,
+              inactiveThumbColor: medio,
+              inactiveTrackColor: tarjeta2,
+              trackOutlineColor: WidgetStateProperty.resolveWith(
+                (states) =>
+                    states.contains(WidgetState.selected) ? morado : tenue,
+              ),
             ),
           ]),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: blanco.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child:
-              const Icon(Icons.notifications_outlined, color: blanco, size: 20),
         ),
-        const SizedBox(width: 14),
-        Expanded(
-            child: Text(titulo,
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w600, color: blanco))),
-        Switch(
-          value: valor,
-          onChanged: onChanged,
-          activeThumbColor: verde,
-          inactiveThumbColor: tenue,
-          inactiveTrackColor: tarjeta2,
-        ),
-      ]),
+      ),
     );
   }
 }
 
-class _ItemInfo extends StatelessWidget {
+class _ItemInfo extends StatefulWidget {
   final IconData icono;
   final String titulo;
   final String valor;
+  final int index;
 
   const _ItemInfo({
     required this.icono,
     required this.titulo,
     required this.valor,
+    this.index = 0,
   });
 
   @override
+  State<_ItemInfo> createState() => _ItemInfoState();
+}
+
+class _ItemInfoState extends State<_ItemInfo> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 120 + widget.index * 60), () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-          color: tarjeta,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ]),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(10),
+    return AnimatedOpacity(
+      opacity: _visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: _visible ? Offset.zero : const Offset(0, 0.12),
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: Color(0xFF666666).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icono, color: Color(0xFF888888), size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-            child: Text(titulo,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  tarjeta,
+                  tarjeta2.withValues(alpha: 0.6),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]),
+          child: Row(children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF888888).withValues(alpha: 0.18),
+                    const Color(0xFF666666).withValues(alpha: 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child:
+                  Icon(widget.icono, color: const Color(0xFFB0B0B0), size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+                child: Text(widget.titulo,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: blanco))),
+            Text(widget.valor,
                 style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w600, color: blanco))),
-        Text(valor,
-            style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF888888),
-                fontWeight: FontWeight.w500)),
-      ]),
+                    fontSize: 13,
+                    color: Color(0xFF888888),
+                    fontWeight: FontWeight.w500)),
+          ]),
+        ),
+      ),
     );
   }
 }
@@ -696,8 +975,8 @@ class _AvatarWidget extends StatelessWidget {
       imagen = ClipOval(
         child: Image.file(
           File(perfil.fotoPath!),
-          width: 80,
-          height: 80,
+          width: 96,
+          height: 96,
           fit: BoxFit.cover,
         ),
       );
@@ -705,29 +984,61 @@ class _AvatarWidget extends StatelessWidget {
       imagen = ClipOval(
         child: Image.asset(
           perfil.avatarAsset!,
-          width: 80,
-          height: 80,
+          width: 96,
+          height: 96,
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
         ),
       );
     } else {
       imagen = Container(
-        width: 80,
-        height: 80,
+        width: 96,
+        height: 96,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: verde.withValues(alpha: 0.15),
-          border: Border.all(color: verde.withValues(alpha: 0.3), width: 2),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              morado.withValues(alpha: 0.28),
+              morado.withValues(alpha: 0.10),
+            ],
+          ),
         ),
         child: Center(
           child: Text(iniciales,
               style: const TextStyle(
-                  fontSize: 28, fontWeight: FontWeight.w600, color: verde)),
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  color: blanco)),
         ),
       );
     }
 
-    return SizedBox(width: 80, height: 80, child: imagen);
+    return Container(
+      width: 96,
+      height: 96,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: morado.withValues(alpha: 0.55),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: morado.withValues(alpha: 0.45),
+            blurRadius: 28,
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: morado.withValues(alpha: 0.20),
+            blurRadius: 50,
+            spreadRadius: 6,
+          ),
+        ],
+      ),
+      child: imagen,
+    );
   }
 }

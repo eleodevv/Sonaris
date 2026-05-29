@@ -18,12 +18,7 @@ class PerfilService extends ChangeNotifier {
   static const String _keyFotoPath = 'perfil_foto_path';
   static const String _keyAvatarAsset = 'perfil_avatar_asset';
 
-  static const List<String> avatares = [
-    'assets/avatares/avatar1.png',
-    'assets/avatares/avatar2.png',
-    'assets/avatares/avatar3.png',
-    'assets/avatares/avatar4.png',
-  ];
+  static const List<String> avatares = [];
 
   PerfilService() {
     _cargarDatos();

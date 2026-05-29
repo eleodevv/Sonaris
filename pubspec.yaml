@@ -42,6 +42,11 @@ flutter:
     - assets/logo_sonaris.png
     - assets/fondo.png
     - assets/imagenFondo2.png
+    - assets/onboarding1.png
+    - assets/onboarding2.png
+    - assets/onboarding3.png
+    - assets/onboarding4.png
+    - assets/onboarding5.png
     - assets/grid/grid1.png
     - assets/grid/grid2.png
     - assets/grid/grid3.png
@@ -51,10 +56,7 @@ flutter:
     - assets/grid/grid7.png
     - assets/grid/grid8.png
     - assets/grid/grid9.png
-    - assets/avatares/avatar1.png
-    - assets/avatares/avatar2.png
-    - assets/avatares/avatar3.png
-    - assets/avatares/avatar4.png
+    - assets/avatares/
     - assets/A-07-LAZARUS.wav
     - assets/Am-08-LAZARUS.wav
     - assets/C-05-AT2020.wav

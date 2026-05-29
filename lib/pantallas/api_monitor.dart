@@ -101,16 +101,16 @@ class PantallaApiMonitor extends StatelessWidget {
   }
 
   Widget _tarjetaEndpoints() {
-    return _Tarjeta(
+    return const _Tarjeta(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const _Etiqueta('ENDPOINTS'),
-        const SizedBox(height: 12),
+        _Etiqueta('ENDPOINTS'),
+        SizedBox(height: 12),
         _FilaEndpoint('POST', '/clasificar', 'MLP · 6 acordes', verde),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _FilaEndpoint('POST', '/verificar',  'DSP fallback',    ambar),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _FilaEndpoint('GET',  '/health',     'Health check',    medio),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         _FilaEndpoint('GET',  '/acordes',    'Lista acordes',   medio),
       ]),
     );
@@ -121,12 +121,12 @@ class PantallaApiMonitor extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const _Etiqueta('MODELO'),
         const SizedBox(height: 12),
-        _FilaInfo('Tipo',      'MLP (sklearn 1.5.2)'),
-        _FilaInfo('Capas',     '128 → 64 → 6 (softmax)'),
-        _FilaInfo('Dataset',   '12,360 archivos WAV reales'),
+        const _FilaInfo('Tipo',      'MLP (sklearn 1.5.2)'),
+        const _FilaInfo('Capas',     '128 → 64 → 6 (softmax)'),
+        const _FilaInfo('Dataset',   '12,360 archivos WAV reales'),
         _FilaInfo('Acordes',   acordes.join(' · ')),
-        _FilaInfo('Accuracy',  '99.73%'),
-        _FilaInfo('Features',  '31 (chroma + spectral + pitch)'),
+        const _FilaInfo('Accuracy',  '99.73%'),
+        const _FilaInfo('Features',  '31 (chroma + spectral + pitch)'),
       ]),
     );
   }
@@ -134,10 +134,10 @@ class PantallaApiMonitor extends StatelessWidget {
   Widget _tarjetaHistorial(List<Map<String, dynamic>> historial) {
     return _Tarjeta(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const _Etiqueta('HISTORIAL DE PINGS'),
-          const Spacer(),
-          const Text('auto cada 10s',
+        const Row(children: [
+          _Etiqueta('HISTORIAL DE PINGS'),
+          Spacer(),
+          Text('auto cada 10s',
             style: TextStyle(fontSize: 9, color: tenue)),
         ]),
         const SizedBox(height: 12),
